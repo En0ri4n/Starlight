@@ -16,7 +16,7 @@ import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 public class StarLight
 {
 	public static final Logger LOGGER = LogManager.getLogger(References.MOD_NAME);
-	// private ServerProxy proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> ServerProxy::new);
+	// private ServerProxy proxy = DistExecutor.safeRunForDist(() -> ClientProxy::new, () -> ServerProxy::new); a
 
 	public StarLight()
 	{
