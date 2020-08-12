@@ -12,4 +12,5 @@ public class InitItems
 	public static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, References.MOD_ID);
 	
 	public static final RegistryObject<Item> STAR_ORE = ITEMS.register("star_ore", () -> new ItemBlockBasic(InitBlocks.STAR_ORE.get()));
+	public static final RegistryObject<Item> STAR = ITEMS.register("star", () -> new Item(new Item.Properties().maxStackSize(1)));
 }
