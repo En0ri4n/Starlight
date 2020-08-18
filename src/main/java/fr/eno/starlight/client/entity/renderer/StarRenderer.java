@@ -35,7 +35,7 @@ public class StarRenderer extends EntityRenderer<StarEntity>
 
 		float scale = entity.getSize();
 		matrixStackIn.scale(scale, scale, scale);
-		this.itemRenderer.renderItem(entity.getItem(), ItemCameraTransforms.TransformType.GROUND, packedLightIn, OverlayTexture.NO_OVERLAY, matrixStackIn, bufferIn);
+		this.itemRenderer.renderItem(entity.getItem(), ItemCameraTransforms.TransformType.GROUND, 200, OverlayTexture.NO_OVERLAY, matrixStackIn, bufferIn);
 		matrixStackIn.pop();
 		super.render(entity, entityYaw, partialTicks, matrixStackIn, bufferIn, packedLightIn);
 	}
@@ -45,5 +45,4 @@ public class StarRenderer extends EntityRenderer<StarEntity>
 	{
 		return PlayerContainer.LOCATION_BLOCKS_TEXTURE;
 	}
-
 }

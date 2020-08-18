@@ -8,24 +8,16 @@ import net.minecraft.world.dimension.Dimension;
 import net.minecraft.world.dimension.DimensionType;
 import net.minecraftforge.common.ModDimension;
 
-public class StarModDimension extends ModDimension
-{
-	@SuppressWarnings("unused")
-	private final int id;
-	
-	public StarModDimension()
-	{
-		this.id = 3;
-	}	
-	
+public class UtopianModDimension extends ModDimension
+{	
 	public static DimensionType getDimensionType() 
-	{		
-		return DimensionType.byName(InitDimensions.STAR_DIMENSION.get().getRegistryName());
+	{
+		return InitDimensions.UTOPIAN_DIM_TYPE;
 	}
 	
 	@Override
 	public BiFunction<World, DimensionType, ? extends Dimension> getFactory() 
 	{
-		return StarDimension::new;
+		return UtopianDimension::new;
 	}
 }

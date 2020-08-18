@@ -10,6 +10,9 @@ import net.minecraftforge.registries.ForgeRegistries;
 public class InitBlocks
 {
 	public static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, References.MOD_ID);
-	
+
+	public static final RegistryObject<Block> FRAGMENTED_STAR_ORE = BLOCKS.register("fragmented_star_ore", () -> new BasicBlock(3.0F));
+	public static final RegistryObject<Block> STAR_GRASS = BLOCKS.register("star_grass", () -> new BasicBlock(3.0F));
+	public static final RegistryObject<Block> STAR_STONE = BLOCKS.register("star_stone", () -> new BasicBlock(3.0F));
 	public static final RegistryObject<Block> STAR_ORE = BLOCKS.register("star_ore", () -> new BasicBlock(3.0F));
 }

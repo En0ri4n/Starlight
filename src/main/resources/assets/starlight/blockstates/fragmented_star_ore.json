@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "": { "model": "starlight:block/fragmented_star_ore" }
+    }
+}
