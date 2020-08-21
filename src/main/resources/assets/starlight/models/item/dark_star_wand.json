@@ -1,0 +1,19 @@
+{
+	"credit": "Made with Blockbench",
+	"parent": "item/handheld",
+	"textures": {
+		"layer0": "starlight:item/dark_star_wand"
+	},
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [0, 0, -42],
+			"translation": [0.5, 5.5, 2.5],
+			"scale": [0.93, 0.93, 0.93]
+		},
+		"thirdperson_lefthand": {
+			"rotation": [0, 0, 45],
+			"translation": [-0.75, 5.5, 2.5],
+			"scale": [0.93, 0.93, 0.93]
+		}
+	}
+}

@@ -3,40 +3,38 @@ package fr.eno.starlight.packets;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import fr.eno.starlight.client.screen.TravelRequestSpaceScreen;
-import fr.eno.starlight.utils.ScreenTravelManager;
-import net.minecraft.client.Minecraft;
+import fr.eno.starlight.client.utils.OpenScreenUtils;
 import net.minecraft.network.PacketBuffer;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.network.NetworkEvent.Context;
 
-public class DisplayScreenPacket
+public class DisplaySpeechScreenPacket
 {
-	private int id;
+	private ResourceLocation loc;
 	private UUID starId;
-	
-	public DisplayScreenPacket(int idIn, UUID starIdIn)
+
+	public DisplaySpeechScreenPacket(ResourceLocation locIn, UUID starIdIn)
 	{
-		this.id = idIn;
+		this.loc = locIn;
 		this.starId = starIdIn;
 	}
-	
-	public static void encode(DisplayScreenPacket msg, PacketBuffer buf)
+
+	public static void encode(DisplaySpeechScreenPacket msg, PacketBuffer buf)
 	{
-		buf.writeInt(msg.id);
+		buf.writeResourceLocation(msg.loc);
 		buf.writeUniqueId(msg.starId);
 	}
-	
-	public static DisplayScreenPacket decode(PacketBuffer buf)
+
+	public static DisplaySpeechScreenPacket decode(PacketBuffer buf)
 	{
-		return new DisplayScreenPacket(buf.readInt(), buf.readUniqueId());
+		return new DisplaySpeechScreenPacket(buf.readResourceLocation(), buf.readUniqueId());
 	}
-	
-	public static class ClientHandler
+
+	public static void handle(DisplaySpeechScreenPacket msg, Supplier<Context> ctx)
 	{
-		public static void handle(DisplayScreenPacket msg, Supplier<Context> ctx)
-		{
-			Minecraft.getInstance().displayGuiScreen(new TravelRequestSpaceScreen(ScreenTravelManager.getById(msg.id), msg.starId));
-			ctx.get().setPacketHandled(true);
-		}
+		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> OpenScreenUtils.openSpeechScreen(msg.loc, msg.starId));
+		ctx.get().setPacketHandled(true);
 	}
 }

@@ -2,8 +2,8 @@ package fr.eno.starlight.world.gen;
 
 import java.util.List;
 
-import fr.eno.starlight.world.biome.provider.AstralBiomeProvider;
 import fr.eno.starlight.world.biome.provider.AstralBiomeProviderSettings;
+import fr.eno.starlight.world.biome.provider.DefaultBiomeProvider;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.util.SharedSeedRandom;
 import net.minecraft.util.Util;
@@ -36,7 +36,7 @@ public class AstralChunkGenerator extends NoiseChunkGenerator<AstralGenSettings>
 
 	public AstralChunkGenerator(IWorld worldIn, BiomeProvider provider, AstralGenSettings settingsIn)
 	{
-		super(worldIn, new AstralBiomeProvider(new AstralBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
+		super(worldIn, new DefaultBiomeProvider(new AstralBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
 		this.randomSeed.skip(2620);
 		this.depthNoise = new OctavesNoiseGenerator(this.randomSeed, 15, 0);
 	}

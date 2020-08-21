@@ -1,0 +1,11 @@
+{
+	"star_grow": {
+    "category": "entity",
+    "sounds": [
+      {
+        "name": "starlight:entity/star_grow",
+        "stream": true
+      }
+    ]
+  }
+}

@@ -11,13 +11,14 @@ import fr.eno.starlight.References;
 import fr.eno.starlight.client.utils.Title;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.client.event.RenderGameOverlayEvent;
 import net.minecraftforge.client.event.RenderGameOverlayEvent.ElementType;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.Mod.EventBusSubscriber.Bus;
 
-@Mod.EventBusSubscriber(modid = References.MOD_ID, bus = Bus.FORGE)
+@Mod.EventBusSubscriber(modid = References.MOD_ID, bus = Bus.FORGE, value = Dist.CLIENT)
 public class OverlayHandler
 {
 	private static Minecraft mc = Minecraft.getInstance();

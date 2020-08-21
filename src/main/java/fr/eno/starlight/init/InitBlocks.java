@@ -2,6 +2,7 @@ package fr.eno.starlight.init;
 
 import fr.eno.starlight.References;
 import fr.eno.starlight.block.BasicBlock;
+import fr.eno.starlight.block.StarChestBlock;
 import net.minecraft.block.Block;
 import net.minecraftforge.fml.RegistryObject;
 import net.minecraftforge.registries.DeferredRegister;
@@ -15,4 +16,6 @@ public class InitBlocks
 	public static final RegistryObject<Block> STAR_GRASS = BLOCKS.register("star_grass", () -> new BasicBlock(3.0F));
 	public static final RegistryObject<Block> STAR_STONE = BLOCKS.register("star_stone", () -> new BasicBlock(3.0F));
 	public static final RegistryObject<Block> STAR_ORE = BLOCKS.register("star_ore", () -> new BasicBlock(3.0F));
+	
+	public static final RegistryObject<Block> STAR_CHEST = BLOCKS.register("star_chest", () -> new StarChestBlock());
 }

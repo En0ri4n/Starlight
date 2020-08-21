@@ -10,6 +10,8 @@ public class DefaultTeleporter implements ITeleporter
 {
 	private static DefaultTeleporter INSTANCE;
 	
+	private DefaultTeleporter() {}
+	
 	@Override
 	public Entity placeEntity(Entity entity, ServerWorld currentWorld, ServerWorld destWorld, float yaw, Function<Boolean, Entity> repositionEntity)
 	{

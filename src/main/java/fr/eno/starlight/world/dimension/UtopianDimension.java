@@ -1,6 +1,6 @@
 package fr.eno.starlight.world.dimension;
 
-import fr.eno.starlight.world.biome.provider.UtopianBiomeProvider;
+import fr.eno.starlight.world.biome.provider.DefaultBiomeProvider;
 import fr.eno.starlight.world.biome.provider.UtopianBiomeProviderSettings;
 import fr.eno.starlight.world.gen.UtopianChunkGenerator;
 import fr.eno.starlight.world.gen.UtopianGenSettings;
@@ -23,7 +23,7 @@ public class UtopianDimension extends Dimension
 	@Override
 	public ChunkGenerator<?> createChunkGenerator()
 	{
-		return new UtopianChunkGenerator(world, new UtopianBiomeProvider(new UtopianBiomeProviderSettings(world.getWorldInfo())), new UtopianGenSettings());
+		return new UtopianChunkGenerator(world, new DefaultBiomeProvider(new UtopianBiomeProviderSettings(world.getWorldInfo())), new UtopianGenSettings());
 	}
 
 	@Override

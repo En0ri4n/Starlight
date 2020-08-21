@@ -2,7 +2,7 @@ package fr.eno.starlight.world.gen;
 
 import java.util.List;
 
-import fr.eno.starlight.world.biome.provider.UtopianBiomeProvider;
+import fr.eno.starlight.world.biome.provider.DefaultBiomeProvider;
 import fr.eno.starlight.world.biome.provider.UtopianBiomeProviderSettings;
 import net.minecraft.entity.EntityClassification;
 import net.minecraft.util.SharedSeedRandom;
@@ -36,7 +36,7 @@ public class UtopianChunkGenerator extends NoiseChunkGenerator<UtopianGenSetting
 
 	public UtopianChunkGenerator(IWorld worldIn, BiomeProvider provider, UtopianGenSettings settingsIn)
 	{
-		super(worldIn, new UtopianBiomeProvider(new UtopianBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
+		super(worldIn, new DefaultBiomeProvider(new UtopianBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
 		this.randomSeed.skip(2620);
 		this.depthNoise = new OctavesNoiseGenerator(this.randomSeed, 15, 0);
 	}

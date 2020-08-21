@@ -1,5 +1,6 @@
 package fr.eno.starlight.world.gen;
 
+import fr.eno.starlight.init.InitBlocks;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.world.gen.GenerationSettings;
@@ -10,7 +11,7 @@ public class UtopianGenSettings extends GenerationSettings
 	
 	public BlockState getDefaultBlock()
 	{
-		return Blocks.LIME_STAINED_GLASS.getDefaultState();
+		return InitBlocks.STAR_STONE.get().getDefaultState();
 	}
 	
 	@Override

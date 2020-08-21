@@ -3,28 +3,35 @@ package fr.eno.starlight.client.screen;
 import java.awt.Color;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import fr.eno.starlight.References;
 import fr.eno.starlight.client.screen.button.TextSpeechButton;
-import fr.eno.starlight.utils.ScreenTravelManager;
+import fr.eno.starlight.init.InitDimensions;
+import fr.eno.starlight.packets.NetworkManager;
+import fr.eno.starlight.packets.RewardPlayerPacket;
+import fr.eno.starlight.packets.UpdateStarEntityPacket;
+import fr.eno.starlight.utils.Speechs;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.TextComponent;
 
-public abstract class SpeechScreen extends Screen
+public class SpeechScreen extends Screen
 {
-	private ScreenTravelManager manager;
+	private Speechs speech;
 	private TextSpeechButton nextButton;
 	private int currentLine;
 	private List<String> lines;
-	private String requestString;
+	private boolean showSpeech;
+	private UUID starId;
 	
-	public SpeechScreen(ScreenTravelManager managerIn)
+	public SpeechScreen(Speechs managerIn, UUID starIdIn)
 	{
-		super(References.getTranslate("screen.TravelRequestSpace.title"));
-		this.manager = managerIn;
+		super(References.getTranslate("screen.SpeechScreen.title"));
+		this.speech = managerIn;
+		this.showSpeech = true;
 		this.currentLine = 0;
-		requestString = "";
+		this.starId = starIdIn;
 	}
 	
 	@Override
@@ -38,13 +45,12 @@ public abstract class SpeechScreen extends Screen
 			this.currentLine++;
 			if(this.currentLine > this.lines.size() - 1)
 			{
-				SpeechScreen.this.buttons.forEach(button -> button.visible = true);
-				b.visible = false;
-				b.active = false;
+				minecraft.displayGuiScreen((Screen) null);
 				
-				lines.clear();
-				this.requestString = this.getRequest().getFormattedText();
-				this.currentLine = 0;
+				if(InitDimensions.UTOPIAN_DIM_TYPE == this.speech.getType())
+				{
+					NetworkManager.getNetwork().sendToServer(new RewardPlayerPacket(this.starId));
+				}
 			}
 		}));
 		
@@ -53,9 +59,17 @@ public abstract class SpeechScreen extends Screen
 			b.visible = false;
 		});
 
-		lines = new ArrayList<String>(this.font.listFormattedStringToWidth(this.getSpeech().getFormattedText(), window.getScaledWidth() - (window.getScaledWidth() / 2 + 10)));
+		lines = new ArrayList<String>(this.font.listFormattedStringToWidth(this.getSpeech().getFormattedText(), window.getScaledWidth() - (window.getScaledWidth() / 2 + 20)));
 		
 		nextButton.visible = true;
+		
+		if(lines.isEmpty())
+		{
+			SpeechScreen.this.buttons.forEach(button -> button.visible = true);
+			nextButton.visible = false;
+			nextButton.active = false;
+			this.showSpeech = false;
+		}
 	}
 	
 	@Override
@@ -69,10 +83,14 @@ public abstract class SpeechScreen extends Screen
 		Screen.fill(x, y, width, height, Color.BLACK.getRGB());
 		Screen.fill(x + 4, y - 4, width - 4, height + 4, Color.WHITE.getRGB());
 		Screen.fill(x + 6, y - 6, width - 6, height + 6, Color.BLACK.getRGB());
-		this.minecraft.fontRenderer.drawStringWithShadow(this.getCurrentLine(this.currentLine), x + 20, y - height + 20, Color.WHITE.getRGB());
-		this.minecraft.fontRenderer.drawStringWithShadow(this.requestString, (x + width) / 2 - font.getStringWidth(this.requestString) / 2, y - height + 40, Color.WHITE.getRGB());
-		this.minecraft.fontRenderer.drawStringWithShadow(this.getCurrentLine(this.currentLine + 1), x + 20, y - height + 40, Color.WHITE.getRGB());
-		this.minecraft.fontRenderer.drawStringWithShadow(this.getCurrentLine(this.currentLine + 2), x + 20, y - height + 60, Color.WHITE.getRGB());
+		
+		if(showSpeech)
+		{
+			this.minecraft.fontRenderer.drawStringWithShadow(this.getCurrentLine(this.currentLine), this.width / 2 - font.getStringWidth(this.getCurrentLine(this.currentLine)) / 2, y - height + 20, Color.WHITE.getRGB());
+			this.minecraft.fontRenderer.drawStringWithShadow(this.getCurrentLine(this.currentLine + 1), this.width / 2 - font.getStringWidth(this.getCurrentLine(this.currentLine + 1)) / 2, y - height + 40, Color.WHITE.getRGB());
+			this.minecraft.fontRenderer.drawStringWithShadow(this.getCurrentLine(this.currentLine + 2), this.width / 2 - font.getStringWidth(this.getCurrentLine(this.currentLine + 2)) / 2, y - height + 60, Color.WHITE.getRGB());
+		}
+		
 		super.render(mouseX, mouseY, partialTicks);
 	}
 	
@@ -84,18 +102,25 @@ public abstract class SpeechScreen extends Screen
 		return lines.get(index);
 	}
 	
-	public final ScreenTravelManager getManager()
+	public final Speechs getManager()
 	{
-		return this.manager;
+		return this.speech;
 	}
 	
-	private final TextComponent getRequest()
-	{
-		return this.getManager().getRequest();
-	}
-	
-	public final TextComponent getSpeech()
+	public TextComponent getSpeech()
 	{
 		return this.getManager().getSpeech();
+	}
+	
+	@Override
+	public void onClose()
+	{
+		NetworkManager.getNetwork().sendToServer(new UpdateStarEntityPacket(starId));
+	}
+	
+	@Override
+	public boolean isPauseScreen()
+	{
+		return false;
 	}
 }

@@ -7,5 +7,33 @@
 	"starlight.screen.TravelRequestSpace.deny": "Deny",
 	"starlight.screen.TravelRequestSpace.speech": "A long time ago, in a galaxy far, far away... It is a period of civil war. Rebel spaceships, striking from a hidden base, have won their first victory against the evil Galactic Empire. During the battle, Rebel spies managed to steal secret plans to the Empire's ultimate weapon, the Death Star, an armored space station with enough power to destroy an entire planet. Pursued by the Empire's sinister agents, Princess Leia races home aboard her starship, custodian of the stolen plans that can save her people and restore freedom to the galaxy....",
 	"starlight.screen.TravelRequestSpace.request": "Do you want to come with me to space ?",
-	"starlight.screen.SpeechScreen.next": "Next"
+	"starlight.screen.SpeechScreen.next": "Next",
+	"starlight.item.StarWand.activated": "§2§lActivated",
+	"starlight.item.StarWand.desactivated": "§4§lDesactivated",
+	"item.starlight.astral_star_wand": "Astral Star Wand",
+	"item.starlight.utopian_star_wand": "Utopian Star Wand",
+	"item.starlight.star_controller": "Star Controller",
+	"item.starlight.star_summoner": "Star Summoner",
+	"item.starlight.star_helmet": "Star Helmet",
+	"item.starlight.star_chestplate": "Star Chestplate",
+	"item.starlight.star_leggings": "Star Leggings",
+	"item.starlight.star_boots": "Star Boots",
+	"item.starlight.star_fragment": "Star Fragment",
+	"item.starlight.star": "Star",
+	"block.starlight.star_ore": "Star Ore",
+	"block.starlight.star_stone": "Star Stone",
+	"block.starlight.star_grass": "Star Grass",
+	"block.starlight.fragmented_star_ore": "Fragmented Star Ore"	,
+	"starlight.item.StarWand.teleportation": "§6You will be teleported...",
+	"starlight.item.StarWand.alreadyInDimension": "§cYou are already in this Dimension !",
+	
+	"starlight.screen.SpeechScreen.overworld.speech": "A long time ago, in a galaxy far, far away... oh sorry that escaped me. I need help, I was separated from my parents as we were flying over the utopian planet. I couldn't go further than the astral planet, it is the closest to the cubinary system. If you want to help me you will have to climb on my back ! But i need energy to go, can you go get me a star wand ?",
+	"starlight.screen.SpeechScreen.astral.speech": "YES! we did it! I didn't think we could go this far :)! I still need the energy to get the speed necessary to go to the Dark Dimension. This planet is quite calm I believe, you can walk around it without fear.",
+	"starlight.screen.SpeechScreen.dark.speech": "Ouch! We are coming to the dark planet... This planet is believed to be scary and populated by evil people and ... it's true! Be careful of yourself if you visit this planet! Monsters are stronger than you think.",
+	"starlight.screen.SpeechScreen.utopian.speech": "Here we are ! The utopian planet! Thank you for having accompanied me here, I would never have made this trip without you! I have something for you that might be useful in the future. As for me, I'll stay here until my parents come to pick me up!",
+	
+	"starlight.screen.RequestScreen.astral.request": "Do you want to go to the Astral planet ?",
+	"starlight.screen.RequestScreen.dark.request": "Do you want to go to the Dark planet ?",
+	"starlight.screen.RequestScreen.utopian.request": "Do you want to go to the Utopian planet ?"
+	
 }

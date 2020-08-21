@@ -1,7 +1,7 @@
 package fr.eno.starlight.world.dimension;
 
-import fr.eno.starlight.world.biome.provider.AstralBiomeProvider;
 import fr.eno.starlight.world.biome.provider.AstralBiomeProviderSettings;
+import fr.eno.starlight.world.biome.provider.DefaultBiomeProvider;
 import fr.eno.starlight.world.gen.AstralChunkGenerator;
 import fr.eno.starlight.world.gen.AstralGenSettings;
 import net.minecraft.util.math.BlockPos;
@@ -23,7 +23,7 @@ public class AstralDimension extends Dimension
 	@Override
 	public ChunkGenerator<?> createChunkGenerator()
 	{
-		return new AstralChunkGenerator(world, new AstralBiomeProvider(new AstralBiomeProviderSettings(world.getWorldInfo())), new AstralGenSettings());
+		return new AstralChunkGenerator(world, new DefaultBiomeProvider(new AstralBiomeProviderSettings(world.getWorldInfo())), new AstralGenSettings());
 	}
 
 	@Override

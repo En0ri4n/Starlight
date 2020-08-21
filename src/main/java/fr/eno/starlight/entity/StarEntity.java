@@ -2,12 +2,16 @@ package fr.eno.starlight.entity;
 
 import java.util.Random;
 
+import fr.eno.starlight.init.InitDimensions;
 import fr.eno.starlight.init.InitEntities;
 import fr.eno.starlight.init.InitItems;
-import fr.eno.starlight.init.InitPackets;
+import fr.eno.starlight.init.InitSounds;
+import fr.eno.starlight.item.StarControllerItem;
 import fr.eno.starlight.item.StarWandItem;
-import fr.eno.starlight.packets.DisplayScreenPacket;
-import fr.eno.starlight.utils.ScreenTravelManager;
+import fr.eno.starlight.packets.DisplaySpeechScreenPacket;
+import fr.eno.starlight.packets.DisplayTravelScreenPacket;
+import fr.eno.starlight.packets.NetworkManager;
+import fr.eno.starlight.utils.TravelUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
@@ -17,39 +21,32 @@ import net.minecraft.entity.Pose;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
-import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
-import net.minecraft.item.Items;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.nbt.ListNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
-import net.minecraft.util.DamageSource;
 import net.minecraft.util.Hand;
+import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.MathHelper;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.world.Explosion;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
+import net.minecraftforge.api.distmarker.Dist;
+import net.minecraftforge.api.distmarker.OnlyIn;
 import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.fml.network.PacketDistributor;
 
+@OnlyIn(value = Dist.CLIENT, _interface = IRendersAsItem.class)
 public class StarEntity extends MobEntity implements IRendersAsItem
 {
+	private static final DataParameter<Boolean> HAS_REWARD = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
+	private static final DataParameter<Boolean> IS_TALKING = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Integer> LEVEL = EntityDataManager.createKey(StarEntity.class, DataSerializers.VARINT);
 	private static final DataParameter<Float> SIZE = EntityDataManager.createKey(StarEntity.class, DataSerializers.FLOAT);
-	private static final DataParameter<Boolean> IS_TALKING = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Integer> REQUEST_COOLDOWN = EntityDataManager.createKey(StarEntity.class, DataSerializers.VARINT);
-	
-
-	public double accelerationX;
-	public double accelerationY;
-	public double accelerationZ;
 
 	public StarEntity(EntityType<? extends StarEntity> type, World world)
 	{
@@ -64,104 +61,64 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	public StarEntity(World world, double posX, double posY, double posZ, double accelerationX, double accelerationY, double accelerationZ)
 	{
 		this(InitEntities.STAR.get(), world);
-
 		this.setLocationAndAngles(posX, posY, posZ, this.rotationYaw, this.rotationPitch);
 		this.setPosition(posX, posY, posZ);
-		double size = (double) MathHelper.sqrt(accelerationX * accelerationX + accelerationY * accelerationY + accelerationZ * accelerationZ);
-		this.accelerationX = accelerationX / size * 0.1D;
-		this.accelerationY = accelerationY / size * 0.1D;
-		this.accelerationZ = accelerationZ / size * 0.1D;
 	}
-	
+
 	@Override
 	protected void registerData()
 	{
 		super.registerData();
 		this.dataManager.register(LEVEL, 0);
-		this.dataManager.register(SIZE, 3.0F);
+		this.dataManager.register(HAS_REWARD, true);
+		this.dataManager.register(SIZE, 6.0F);
 		this.dataManager.register(IS_TALKING, false);
 		this.dataManager.register(REQUEST_COOLDOWN, 0);
 	}
-	
+
 	@Override
-	public AxisAlignedBB getCollisionBox(Entity entityIn)
+	public AxisAlignedBB getBoundingBox()
 	{
-		float size = this.getSize() / 10;
-		return new AxisAlignedBB(this.getPosX() - size, this.getPosY(), this.getPosZ() - size, this.getPosX() + size, this.getPosY() + size * 2F, this.getPosZ() + size);
+		float size = 1F; // this.getSize() / 6;
+		return new AxisAlignedBB(this.getPosX() - size / 2, this.getPosY(), this.getPosZ() - size / 2, this.getPosX() + size / 2, this.getPosY() + size / 2, this.getPosZ() + size / 2);
 	}
 
 	@Override
 	public boolean processInteract(PlayerEntity player, Hand hand)
 	{
-		Item item = player.getHeldItem(hand).getItem();
-		
-		if(item instanceof StarWandItem)
+		ItemStack item = player.getHeldItem(hand);
+
+		if (item.getItem() instanceof StarWandItem)
 		{
-			if(((StarWandItem) item).getLevel() == this.getLevel())
+			if (((StarWandItem) item.getItem()).getLevel() == this.getLevel() && !StarWandItem.isActivated(item))
 			{
 				this.setLevel(this.getLevel() + 1);
-				this.setSize(this.getSize() + 2F);
+				this.setSize(this.getSize() + 3F);
+				CompoundNBT nbt = player.getHeldItem(hand).getTag();
+				nbt.putBoolean("Activated", true);
+				player.getHeldItem(hand).setTag(nbt);
+				world.playSound((PlayerEntity) null, getPosition(), InitSounds.STAR_GROW.get(), SoundCategory.NEUTRAL, 100, 1F);
 				return true;
 			}
 		}
-		
-		return this.getPassengers().isEmpty() ? player.startRiding(this) : false;
+
+		if (item.getItem() instanceof StarControllerItem)
+		{
+			return this.getPassengers().isEmpty() ? player.startRiding(this) : false;
+		}
+
+		if (!world.isRemote)
+		{
+			NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new DisplaySpeechScreenPacket(this.dimension.getRegistryName(), this.getUniqueID()));
+		}
+
+		return true;
 	}
 
 	@Override
-	public void travel(Vec3d vec)
+	public boolean hasNoGravity()
 	{
-		if (this.isAlive())
-		{
-			Entity entity = this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
-			if (this.isBeingRidden() && this.canBeSteered())
-			{
-				this.prevRotationYaw = this.rotationYaw;
-				this.setRotation(this.rotationYaw, this.rotationPitch);
-				this.renderYawOffset = this.rotationYaw;
-				this.rotationYawHead = this.rotationYaw;
-
-				if (this.canPassengerSteer())
-				{
-
-					this.setAIMoveSpeed(3F);
-					super.travel(entity.getLookVec());
-					this.newPosRotationIncrements = 0;
-				} else
-				{
-					this.setMotion(Vec3d.ZERO);
-				}
-			} else
-			{
-				super.travel(vec);
-			}
-		}
-	}
-
-	@Override
-	public boolean attackEntityFrom(DamageSource source, float amount)
-	{
-		if (this.isInvulnerableTo(source))
-		{
-			return false;
-		}
-		else
-		{
-			this.markVelocityChanged();
-			if (source.getTrueSource() != null)
-			{
-				Vec3d vec3d = source.getTrueSource().getLookVec();
-				this.setMotion(vec3d);
-				this.accelerationX = vec3d.x * 0.1D;
-				this.accelerationY = vec3d.y * 0.1D;
-				this.accelerationZ = vec3d.z * 0.1D;
-
-				return true;
-			} else
-			{
-				return false;
-			}
-		}
+		return true;
 	}
 
 	@Override
@@ -171,7 +128,7 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 		{
 			PlayerEntity player = (PlayerEntity) this.getControllingPassenger();
 
-			if (player.getHeldItemMainhand().getItem() == Items.STICK && !isTalking())
+			if (player.getHeldItemMainhand().getItem() instanceof StarControllerItem && !isTalking())
 			{
 				return true;
 			}
@@ -196,68 +153,96 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	public void tick()
 	{
 		super.tick();
-		
-		this.decreaseRequestCooldown();
-		
-		if(this.canTellToPlayer())
+
+		Entity entity = this.getControllingPassenger();
+
+		if (entity != null)
 		{
-			this.tellToPlayer();
+			Vec3d look = entity.getLookVec().scale(2);
+			this.addVelocity(look.x, look.y, look.z);
+		}
+
+		if (!world.isRemote)
+		{
+			this.decreaseRequestCooldown();
+
+			if (this.canTellToPlayer() && this.hasLevel())
+			{
+				this.tellToPlayer();
+			}
 		}
 	}
-	
+
 	private void tellToPlayer()
 	{
-		InitPackets.NETWORK.send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.getPassengers().get(0)), new DisplayScreenPacket(ScreenTravelManager.getDimensionByLevel(this.getLevel()).getId(), this.getUniqueID()));
-		this.setTalking(true);
+		NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.getPassengers().get(0)), new DisplayTravelScreenPacket(TravelUtils.getDimensionByLevel(this.getLevel()).getId(), this.getUniqueID()));
 		this.setRequestCooldown(600);
 		this.setMotion(0D, 0D, 0D);
 	}
-	
+
+	private boolean hasLevel()
+	{
+		return this.getLevel() > TravelUtils.getLevelByDimension(this.dimension);
+	}
+
 	private boolean canTellToPlayer()
 	{
 		return this.getMotion().y > 0 && canTalk() && this.getPosY() > 200 && !world.isRemote && !isTalking();
 	}
-	
+
 	public boolean canTalk()
 	{
+
 		return this.getRequestCooldown() <= 0 && !this.getPassengers().isEmpty();
 	}
-	
+
+	public boolean isTalking()
+	{
+		return this.dataManager.get(IS_TALKING);
+	}
+
+	public void setTalking(boolean isTalking)
+	{
+		this.dataManager.set(IS_TALKING, isTalking);
+	}
+
 	public void setRequestCooldown(int cooldown)
 	{
 		this.dataManager.set(REQUEST_COOLDOWN, cooldown);
 	}
-	
+
 	public int getRequestCooldown()
 	{
 		return this.dataManager.get(REQUEST_COOLDOWN);
 	}
-	
+
 	public void decreaseRequestCooldown()
 	{
-		if(this.getRequestCooldown() > 0)
+		if (this.getRequestCooldown() > 0)
 		{
 			this.dataManager.set(REQUEST_COOLDOWN, this.dataManager.get(REQUEST_COOLDOWN) - 1);
 		}
 	}
-	
-	public Boolean isTalking()
+
+	public boolean canGiveReward()
 	{
-		return this.dataManager.get(IS_TALKING);
+		return this.hasReward() && this.dimension == InitDimensions.UTOPIAN_DIM_TYPE;
 	}
-	
-	private void setTalking(boolean isTalking)
+
+	public boolean hasReward()
 	{
-		if(!this.getPassengers().isEmpty())
-		{
-			this.dataManager.set(IS_TALKING, isTalking);
-		}
+		return this.dataManager.get(HAS_REWARD);
 	}
-	
+
+	public void setNoReward()
+	{
+		this.dataManager.set(HAS_REWARD, false);
+	}
+
 	@Override
 	public EntitySize getSize(Pose poseIn)
 	{
-		return super.getSize(poseIn).scale(this.getSize());
+		return new EntitySize(2, 2, false);
 	}
 
 	@Override
@@ -270,39 +255,29 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	{
 		return this.dataManager.get(SIZE);
 	}
-	
+
 	public void setSize(float size)
 	{
 		this.dataManager.set(SIZE, size);
 	}
-	
+
 	private void setLevel(int level)
 	{
 		this.dataManager.set(LEVEL, level);
 	}
-	
+
 	public int getLevel()
 	{
 		return this.dataManager.get(LEVEL);
-	}
-
-	protected void onImpact(RayTraceResult result)
-	{
-		if (!this.world.isRemote)
-		{
-			this.world.createExplosion((Entity) null, this.getPosX(), this.getPosY(), this.getPosZ(), (float) this.getSize(), true, Explosion.Mode.DESTROY);
-
-			this.remove();
-		}
 	}
 
 	@Override
 	public void writeAdditional(CompoundNBT compound)
 	{
 		super.writeAdditional(compound);
-		Vec3d vec3d = this.getMotion();
-		compound.put("direction", this.newDoubleNBTList(new double[] { vec3d.x, vec3d.y, vec3d.z }));
-		compound.put("power", this.newDoubleNBTList(new double[] { this.accelerationX, this.accelerationY, this.accelerationZ }));
+		compound.putInt("Level", this.getLevel());
+		compound.putBoolean("isTalking", this.isTalking());
+		compound.putInt("RequestCooldown", this.getRequestCooldown());
 		compound.putFloat("Size", this.getSize());
 	}
 
@@ -316,24 +291,19 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 			this.setSize(compound.getFloat("Size"));
 		}
 
-		if (compound.contains("power", 9))
+		if (compound.contains("isTalking"))
 		{
-			ListNBT listnbt = compound.getList("power", 6);
-			if (listnbt.size() == 3)
-			{
-				this.accelerationX = listnbt.getDouble(0);
-				this.accelerationY = listnbt.getDouble(1);
-				this.accelerationZ = listnbt.getDouble(2);
-			}
+			this.setTalking(compound.getBoolean("isTalking"));
 		}
 
-		if (compound.contains("direction", 9) && compound.getList("direction", 6).size() == 3)
+		if (compound.contains("RequestCooldown"))
 		{
-			ListNBT listnbt1 = compound.getList("direction", 6);
-			this.setMotion(listnbt1.getDouble(0), listnbt1.getDouble(1), listnbt1.getDouble(2));
-		} else
+			this.setRequestCooldown(compound.getInt("RequestCooldown"));
+		}
+
+		if (compound.contains("Size"))
 		{
-			this.setMotion(0D, 0D, 0D);
+			this.setSize(compound.getFloat("Size"));
 		}
 	}
 
