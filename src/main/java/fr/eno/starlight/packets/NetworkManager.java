@@ -11,7 +11,7 @@ public class NetworkManager
 	
 	private static SimpleChannel network;
 	
-	public static void createNetwork(SimpleChannel networkIn)
+	public static final void createNetwork(SimpleChannel networkIn)
 	{
 		if(!initialized)
 		{

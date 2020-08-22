@@ -3,7 +3,7 @@ package fr.eno.starlight.packets;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import fr.eno.starlight.client.utils.OpenScreenUtils;
+import fr.eno.starlight.utils.ClientExecutor;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -34,7 +34,7 @@ public class DisplaySpeechScreenPacket
 
 	public static void handle(DisplaySpeechScreenPacket msg, Supplier<Context> ctx)
 	{
-		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> OpenScreenUtils.openSpeechScreen(msg.loc, msg.starId));
+		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientExecutor.openSpeechScreen(msg.loc, msg.starId));
 		ctx.get().setPacketHandled(true);
 	}
 }

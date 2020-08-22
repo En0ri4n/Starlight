@@ -1,23 +1,30 @@
 package fr.eno.starlight.item;
 
+import java.util.Arrays;
 import java.util.List;
 
 import com.mojang.realmsclient.gui.ChatFormatting;
 
 import fr.eno.starlight.References;
+import fr.eno.starlight.entity.StarEntity;
+import fr.eno.starlight.init.InitSounds;
 import fr.eno.starlight.utils.Tabs;
 import fr.eno.starlight.world.teleporter.DefaultTeleporter;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.util.ITooltipFlag;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.ItemUseContext;
 import net.minecraft.item.Rarity;
 import net.minecraft.nbt.CompoundNBT;
-import net.minecraft.util.ActionResult;
+import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.World;
@@ -27,36 +34,39 @@ public class StarWandItem extends Item
 {
 	private final ResourceLocation dimension;
 	private final int level;
-	
+
 	public StarWandItem(ResourceLocation type, int levelIn)
 	{
 		super(new Item.Properties().group(Tabs.ITEMS).maxStackSize(1).setNoRepair().rarity(Rarity.RARE));
 		this.dimension = type;
 		this.level = levelIn;
 	}
-	
+
 	@Override
 	public void inventoryTick(ItemStack stack, World worldIn, Entity entityIn, int itemSlot, boolean isSelected)
 	{
-		if(stack.getTag() == null)
+		if (stack.getTag() == null)
 		{
 			CompoundNBT nbt = new CompoundNBT();
+			nbt.putInt("Level", this.getLevel());
 			nbt.putBoolean("Activated", false);
+			nbt.putIntArray("OverworldSpawnPosition", Arrays.asList(0, 75, 0));
+			nbt.putIntArray("DimensionSpawnPosition", Arrays.asList(0, 75, 0));
 			stack.setTag(nbt);
 		}
 	}
-	
+
 	@Override
 	public void addInformation(ItemStack stack, World worldIn, List<ITextComponent> tooltip, ITooltipFlag flagIn)
 	{
-		if(dimension != null && Minecraft.getInstance().world != null && DimensionType.byName(dimension) != null)
-			tooltip.add(new StringTextComponent(ChatFormatting.GOLD + "Dimension : " + DimensionType.byName(dimension).getRegistryName().getPath()));
-		
-		tooltip.add(new StringTextComponent(""));
-		
-		if(stack.getTag() != null)
+		if (dimension != null && Minecraft.getInstance().world != null && this.getDimension() != null)
+			tooltip.add(new StringTextComponent(ChatFormatting.GOLD + "Dimension : " + this.getDimension().getRegistryName().getPath()));
+
+		if (stack.getTag() != null)
 		{
-			if(stack.getTag().getBoolean("Activated"))
+			tooltip.add(new StringTextComponent(""));
+
+			if (stack.getTag().getBoolean("Activated"))
 			{
 				tooltip.add(References.getTranslate("item.StarWand.activated"));
 			}
@@ -66,50 +76,123 @@ public class StarWandItem extends Item
 			}
 		}
 	}
-	
+
 	@Override
-	public ActionResult<ItemStack> onItemRightClick(World worldIn, PlayerEntity playerIn, Hand handIn)
+	public ActionResultType onItemUse(ItemUseContext ctx)
 	{
-		ItemStack stack = playerIn.getHeldItem(handIn);
-		
-		if(stack.getTag().getBoolean("Activated"))
+		World world = ctx.getWorld();
+		PlayerEntity player = ctx.getPlayer();
+		ItemStack stack = ctx.getItem();
+		BlockPos pos = ctx.getPos();
+		List<Integer> array = Arrays.asList(pos.getX(), pos.getY(), pos.getZ());
+
+		if (!world.isRemote)
 		{
-			if(DimensionType.byName(this.dimension) == DimensionType.OVERWORLD && playerIn.dimension == DimensionType.OVERWORLD)
+			if (player.isSneaking())
 			{
-				playerIn.sendMessage(References.getTranslate("item.StarWand.alreadyInDimension"));
-			}
-			
-			playerIn.sendMessage(References.getTranslate("item.StarWand.teleportation"));
-			
-			if(playerIn.dimension == DimensionType.byName(this.dimension))
-			{
-				playerIn.changeDimension(DimensionType.OVERWORLD, DefaultTeleporter.getInstance());
+				CompoundNBT nbt = stack.getTag();
+
+				if (player.dimension == this.getDimension())
+				{
+					nbt.putIntArray("DimensionSpawnPosition", array);
+
+					player.sendMessage(References.getTranslate("item.StarWand.SetDimensionSpawn", array.get(0), array.get(1), array.get(2)));
+				}
+				else if (player.dimension == DimensionType.OVERWORLD)
+				{
+					nbt.putIntArray("OverworldSpawnPosition", array);
+
+					player.sendMessage(References.getTranslate("item.StarWand.SetOverworldSpawn", array.get(0), array.get(1), array.get(2)));
+				}
+				else
+				{
+					return ActionResultType.FAIL;
+				}
+
+				stack.setTag(nbt);
+
+				return ActionResultType.SUCCESS;
 			}
 			else
 			{
-				playerIn.changeDimension(DimensionType.byName(this.dimension), DefaultTeleporter.getInstance());
-				playerIn.setPosition(0, 75, 0);
+				if (this.getDimension() == DimensionType.OVERWORLD && player.dimension == DimensionType.OVERWORLD)
+				{
+					player.sendMessage(References.getTranslate("item.StarWand.alreadyInDimension"));
+					return ActionResultType.FAIL;
+				}
+
+				player.sendMessage(References.getTranslate("item.StarWand.teleportation"));
+
+				if (player.dimension == this.getDimension())
+				{
+					int[] overworldPos = stack.getTag().getIntArray("OverworldSpawnPosition");
+					player.changeDimension(DimensionType.OVERWORLD, DefaultTeleporter.getInstance());
+					player.setPositionAndUpdate(overworldPos[0], overworldPos[1], overworldPos[2]);
+				}
+				else
+				{
+					int[] dimPos = stack.getTag().getIntArray("DimensionSpawnPosition");
+					player.changeDimension(this.getDimension(), DefaultTeleporter.getInstance());
+					player.setPositionAndUpdate(dimPos[0], dimPos[1], dimPos[2]);
+				}
 			}
 		}
-		
-		return super.onItemRightClick(worldIn, playerIn, handIn);
+
+		return ActionResultType.FAIL;
+
 	}
 	
+	@Override
+	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity player, LivingEntity target, Hand hand)
+	{
+		World world = player.getEntityWorld();
+
+		if (!(target instanceof StarEntity))
+		{
+			return false;
+		}
+
+		if (stack.getItem() instanceof StarWandItem)
+		{
+			StarEntity star = (StarEntity) target;
+			int itemLevel = ((StarWandItem) stack.getItem()).getLevel();
+
+			if (itemLevel == star.getLevel() && !StarWandItem.isActivated(stack) && !world.isRemote)
+			{
+				CompoundNBT nbt = stack.getTag();
+				nbt.putBoolean("Activated", true);
+				stack.setTag(nbt);
+				star.growUp();
+
+				player.world.playSound(star.getPosX(), star.getPosY(), star.getPosZ(), InitSounds.STAR_GROW.get(), SoundCategory.NEUTRAL, 100, 1F, false);
+				player.sendMessage(References.getTranslate("item.StarWand.starGrowUp"));
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private DimensionType getDimension()
+	{
+		return DimensionType.byName(dimension);
+	}
+
 	public int getLevel()
 	{
 		return this.level;
 	}
-	
+
 	public static boolean isActivated(ItemStack stack)
 	{
-		if(stack.getItem() instanceof StarWandItem)
+		if (stack.getItem() instanceof StarWandItem)
 		{
-			if(stack.getTag().getBoolean("Activated"))
+			if (stack.getTag().getBoolean("Activated"))
 			{
-				return false;
+				return true;
 			}
 		}
-		
-		return true;
+
+		return false;
 	}
 }

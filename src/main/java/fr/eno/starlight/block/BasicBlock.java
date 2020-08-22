@@ -7,8 +7,8 @@ import net.minecraftforge.common.ToolType;
 
 public class BasicBlock extends Block
 {
-	public BasicBlock(float hardness)
+	public BasicBlock(float hardness, ToolType tool)
 	{
-		super(Block.Properties.create(Material.ROCK).sound(SoundType.STONE).hardnessAndResistance(hardness).harvestTool(ToolType.PICKAXE));
+		super(Block.Properties.create(Material.ROCK).sound(SoundType.STONE).hardnessAndResistance(hardness).harvestTool(tool));
 	}
 }

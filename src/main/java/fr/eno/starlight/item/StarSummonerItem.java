@@ -1,6 +1,8 @@
 package fr.eno.starlight.item;
 
 import fr.eno.starlight.entity.StarEntity;
+import fr.eno.starlight.utils.Tabs;
+import net.minecraft.entity.effect.LightningBoltEntity;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemUseContext;
@@ -13,7 +15,7 @@ public class StarSummonerItem extends Item
 {
 	public StarSummonerItem()
 	{
-		super(new Item.Properties().maxStackSize(1).rarity(Rarity.UNCOMMON).setNoRepair());
+		super(new Item.Properties().maxStackSize(1).rarity(Rarity.UNCOMMON).setNoRepair().group(Tabs.ITEMS));
 	}
 	
 	@Override
@@ -30,8 +32,8 @@ public class StarSummonerItem extends Item
 		else
 		{
 			StarEntity star = new StarEntity(world);
-			star.setPosition(pos.getX(), pos.getY(), pos.getZ());
-			star.setMotion(0, -30, 0);
+			star.setPosition(pos.getX(), pos.getY() + 2, pos.getZ());
+			world.addEntity(new LightningBoltEntity(world, pos.getX(), pos.getY(), pos.getZ(), false));
 			world.addEntity(star);
 			player.getHeldItem(ctx.getHand()).shrink(1);
 			return ActionResultType.SUCCESS;

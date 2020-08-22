@@ -11,13 +11,11 @@ import net.minecraft.util.text.TextComponent;
 public abstract class RequestScreen extends Screen
 {
 	private Travels manager;
-	private String requestString;
 
 	public RequestScreen(Travels managerIn)
 	{
 		super(References.getTranslate("screen.RequestScreen.title"));
 		this.manager = managerIn;
-		requestString = "";
 	}
 
 	@Override
@@ -37,7 +35,7 @@ public abstract class RequestScreen extends Screen
 		Screen.fill(x + 4, y - 4, width - 4, height + 4, Color.WHITE.getRGB());
 		Screen.fill(x + 6, y - 6, width - 6, height + 6, Color.BLACK.getRGB());
 
-		this.minecraft.fontRenderer.drawStringWithShadow(this.getRequest().getFormattedText(), this.width / 2 - font.getStringWidth(this.requestString) / 2, y - height + 40, Color.WHITE.getRGB());
+		this.minecraft.fontRenderer.drawStringWithShadow(this.getRequest().getFormattedText(), this.width / 2 - font.getStringWidth(this.getRequest().getFormattedText()) / 2, y - height + 40, Color.WHITE.getRGB());
 		
 		super.render(mouseX, mouseY, partialTicks);
 	}
@@ -50,6 +48,12 @@ public abstract class RequestScreen extends Screen
 	private final TextComponent getRequest()
 	{
 		return this.getManager().getRequest();
+	}
+
+	@Override
+	public boolean shouldCloseOnEsc()
+	{
+		return true;
 	}
 	
 	@Override

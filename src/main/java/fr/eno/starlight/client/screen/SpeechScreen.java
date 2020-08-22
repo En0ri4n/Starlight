@@ -7,11 +7,11 @@ import java.util.UUID;
 
 import fr.eno.starlight.References;
 import fr.eno.starlight.client.screen.button.TextSpeechButton;
+import fr.eno.starlight.client.utils.Speechs;
 import fr.eno.starlight.init.InitDimensions;
 import fr.eno.starlight.packets.NetworkManager;
 import fr.eno.starlight.packets.RewardPlayerPacket;
 import fr.eno.starlight.packets.UpdateStarEntityPacket;
-import fr.eno.starlight.utils.Speechs;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.gui.screen.Screen;
 import net.minecraft.util.text.TextComponent;
@@ -122,5 +122,11 @@ public class SpeechScreen extends Screen
 	public boolean isPauseScreen()
 	{
 		return false;
+	}
+	
+	@Override
+	public boolean shouldCloseOnEsc()
+	{
+		return true;
 	}
 }

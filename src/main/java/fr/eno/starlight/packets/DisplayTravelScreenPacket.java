@@ -3,7 +3,7 @@ package fr.eno.starlight.packets;
 import java.util.UUID;
 import java.util.function.Supplier;
 
-import fr.eno.starlight.client.utils.OpenScreenUtils;
+import fr.eno.starlight.utils.ClientExecutor;
 import net.minecraft.network.PacketBuffer;
 import net.minecraftforge.api.distmarker.Dist;
 import net.minecraftforge.fml.DistExecutor;
@@ -33,7 +33,7 @@ public class DisplayTravelScreenPacket
 	
 	public static void handle(DisplayTravelScreenPacket msg, Supplier<Context> ctx)
 	{
-		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> OpenScreenUtils.openTravelScreen(msg.id, msg.starId));
+		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientExecutor.openTravelScreen(msg.id, msg.starId));
 		ctx.get().setPacketHandled(true);
 	}
 }

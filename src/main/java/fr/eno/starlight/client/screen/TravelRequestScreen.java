@@ -11,11 +11,11 @@ import fr.eno.starlight.utils.Travels;
 import net.minecraft.client.MainWindow;
 import net.minecraft.client.gui.screen.Screen;
 
-public class TravelRequestSpaceScreen extends RequestScreen
+public class TravelRequestScreen extends RequestScreen
 {
 	private UUID starId;
 	
-	public TravelRequestSpaceScreen(Travels manager, UUID starIdIn)
+	public TravelRequestScreen(Travels manager, UUID starIdIn)
 	{
 		super(manager);
 		this.starId = starIdIn;

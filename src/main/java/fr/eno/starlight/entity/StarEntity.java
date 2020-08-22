@@ -5,7 +5,6 @@ import java.util.Random;
 import fr.eno.starlight.init.InitDimensions;
 import fr.eno.starlight.init.InitEntities;
 import fr.eno.starlight.init.InitItems;
-import fr.eno.starlight.init.InitSounds;
 import fr.eno.starlight.item.StarControllerItem;
 import fr.eno.starlight.item.StarWandItem;
 import fr.eno.starlight.packets.DisplaySpeechScreenPacket;
@@ -16,11 +15,12 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
 import net.minecraft.entity.IRendersAsItem;
-import net.minecraft.entity.MobEntity;
+import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.Pose;
 import net.minecraft.entity.SpawnReason;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
@@ -28,7 +28,8 @@ import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
 import net.minecraft.util.Hand;
-import net.minecraft.util.SoundCategory;
+import net.minecraft.util.HandSide;
+import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
@@ -40,7 +41,7 @@ import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 @OnlyIn(value = Dist.CLIENT, _interface = IRendersAsItem.class)
-public class StarEntity extends MobEntity implements IRendersAsItem
+public class StarEntity extends LivingEntity implements IRendersAsItem
 {
 	private static final DataParameter<Boolean> HAS_REWARD = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Boolean> IS_TALKING = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
@@ -79,50 +80,56 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	@Override
 	public AxisAlignedBB getBoundingBox()
 	{
-		float size = 1F; // this.getSize() / 6;
+		float size = 3F;
 		return new AxisAlignedBB(this.getPosX() - size / 2, this.getPosY(), this.getPosZ() - size / 2, this.getPosX() + size / 2, this.getPosY() + size / 2, this.getPosZ() + size / 2);
 	}
 
 	@Override
-	public boolean processInteract(PlayerEntity player, Hand hand)
+	public boolean processInitialInteract(PlayerEntity player, Hand hand)
 	{
-		ItemStack item = player.getHeldItem(hand);
+		if (hand == Hand.OFF_HAND)
+			return false;
 
-		if (item.getItem() instanceof StarWandItem)
+		ItemStack stack = player.getHeldItem(hand);
+		
+		if(stack.getItem() instanceof StarWandItem)
 		{
-			if (((StarWandItem) item.getItem()).getLevel() == this.getLevel() && !StarWandItem.isActivated(item))
-			{
-				this.setLevel(this.getLevel() + 1);
-				this.setSize(this.getSize() + 3F);
-				CompoundNBT nbt = player.getHeldItem(hand).getTag();
-				nbt.putBoolean("Activated", true);
-				player.getHeldItem(hand).setTag(nbt);
-				world.playSound((PlayerEntity) null, getPosition(), InitSounds.STAR_GROW.get(), SoundCategory.NEUTRAL, 100, 1F);
-				return true;
-			}
+			return false;
 		}
 
-		if (item.getItem() instanceof StarControllerItem)
+		if (stack.getItem() instanceof StarControllerItem)
 		{
 			return this.getPassengers().isEmpty() ? player.startRiding(this) : false;
 		}
-
+		
 		if (!world.isRemote)
 		{
 			NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new DisplaySpeechScreenPacket(this.dimension.getRegistryName(), this.getUniqueID()));
+			return true;
 		}
 
-		return true;
+		return false;
+	}
+
+	public void growUp()
+	{
+		this.setLevel(this.getLevel() + 1);
+		this.setSize(this.getSize() + 3F);
 	}
 
 	@Override
-	public boolean hasNoGravity()
+	protected int calculateFallDamage(float p_225508_1_, float p_225508_2_)
+	{
+		return 0;
+	}
+
+	public boolean canBeSteered()
 	{
 		return true;
 	}
 
 	@Override
-	public boolean canBeSteered()
+	public boolean canPassengerSteer()
 	{
 		if (this.getControllingPassenger() instanceof PlayerEntity)
 		{
@@ -138,30 +145,43 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	}
 
 	@Override
-	public boolean canPassengerSteer()
-	{
-		return true;
-	}
-
-	@Override
 	public Entity getControllingPassenger()
 	{
 		return this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
 	}
 
+	/*
+	 * Sorry this ugly code :(
+	 */	
 	@Override
-	public void tick()
+	public void livingTick()
 	{
-		super.tick();
-
-		Entity entity = this.getControllingPassenger();
-
-		if (entity != null)
+		if (this.isAlive())
 		{
-			Vec3d look = entity.getLookVec().scale(2);
-			this.addVelocity(look.x, look.y, look.z);
-		}
+			if (!this.hasNoGravity())
+				this.setNoGravity(true);
+			
+			Entity entity = this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
 
+			if (this.isBeingRidden() && this.canBeSteered() && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking())
+			{
+				PlayerEntity player = (PlayerEntity) entity;
+				Vec3d vec = this.getMotion();
+				double x = this.getPosX() + vec.x;
+				double y = this.getPosY() + vec.y;
+				double z = this.getPosZ() + vec.z;
+				this.setMotion(player.getLookVec().scale(0.5F));
+				this.updatePassenger(player);
+				this.setPositionAndRotation(x, y, z, player.rotationYaw, player.rotationPitch);
+				this.fallDistance = 0F;
+				player.fallDistance = 0F;
+			}
+			else
+			{
+				this.setMotion(Vec3d.ZERO);
+			}
+		}
+		
 		if (!world.isRemote)
 		{
 			this.decreaseRequestCooldown();
@@ -171,15 +191,18 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 				this.tellToPlayer();
 			}
 		}
+
+		super.livingTick();
 	}
 
 	private void tellToPlayer()
 	{
 		NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.getPassengers().get(0)), new DisplayTravelScreenPacket(TravelUtils.getDimensionByLevel(this.getLevel()).getId(), this.getUniqueID()));
+		this.setTalking(true);
 		this.setRequestCooldown(600);
 		this.setMotion(0D, 0D, 0D);
 	}
-
+	
 	private boolean hasLevel()
 	{
 		return this.getLevel() > TravelUtils.getLevelByDimension(this.dimension);
@@ -242,7 +265,7 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	@Override
 	public EntitySize getSize(Pose poseIn)
 	{
-		return new EntitySize(2, 2, false);
+		return new EntitySize(1, this.getSize() / 5F, false);
 	}
 
 	@Override
@@ -256,7 +279,7 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 		return this.dataManager.get(SIZE);
 	}
 
-	public void setSize(float size)
+	private void setSize(float size)
 	{
 		this.dataManager.set(SIZE, size);
 	}
@@ -316,5 +339,29 @@ public class StarEntity extends MobEntity implements IRendersAsItem
 	public static boolean getPlacement(EntityType<StarEntity> entity, IWorld world, SpawnReason reason, BlockPos pos, Random random)
 	{
 		return random.nextInt(2) == 0 && pos.getY() > 100 && world.getWorld().isNightTime();
+	}
+
+	@Override
+	public Iterable<ItemStack> getArmorInventoryList()
+	{
+		final Iterable<ItemStack> list = NonNullList.<ItemStack>withSize(4, ItemStack.EMPTY);
+		return list;
+	}
+
+	@Override
+	public ItemStack getItemStackFromSlot(EquipmentSlotType slotIn)
+	{
+		return ItemStack.EMPTY;
+	}
+
+	@Override
+	public void setItemStackToSlot(EquipmentSlotType slotIn, ItemStack stack)
+	{
+	}
+
+	@Override
+	public HandSide getPrimaryHand()
+	{
+		return HandSide.RIGHT;
 	}
 }

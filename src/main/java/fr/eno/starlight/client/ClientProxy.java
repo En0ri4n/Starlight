@@ -15,10 +15,9 @@ import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
 
-@SuppressWarnings("deprecation")
+@SuppressWarnings({"deprecation", "serial"})
 public class ClientProxy
 {
-	@SuppressWarnings("serial")
 	public static DistExecutor.SafeRunnable executeClientTask(IEventBus bus)
 	{
 		return new DistExecutor.SafeRunnable()

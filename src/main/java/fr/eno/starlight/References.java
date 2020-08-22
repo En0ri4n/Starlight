@@ -19,4 +19,9 @@ public class References
 	{
 		return new TranslationTextComponent(References.MOD_ID + "." + arg);
 	}
+	
+	public static TextComponent getTranslate(String arg, Object... args)
+	{
+		return new TranslationTextComponent(References.MOD_ID + "." + arg, args);
+	}
 }
