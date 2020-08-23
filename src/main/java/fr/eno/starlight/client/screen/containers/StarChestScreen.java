@@ -1,4 +1,4 @@
-package fr.eno.starlight.client.screen;
+package fr.eno.starlight.client.screen.containers;
 
 import com.mojang.blaze3d.systems.RenderSystem;
 
@@ -16,6 +16,8 @@ public class StarChestScreen extends ContainerScreen<ContainerStarChest>
 	public StarChestScreen(ContainerStarChest screenContainer, PlayerInventory inv, ITextComponent titleIn)
 	{
 		super(screenContainer, inv, titleIn);
+		this.xSize = 200;
+		this.ySize = 200;
 	}
 
 	@Override

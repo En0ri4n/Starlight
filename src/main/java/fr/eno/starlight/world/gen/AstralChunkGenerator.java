@@ -36,7 +36,7 @@ public class AstralChunkGenerator extends NoiseChunkGenerator<AstralGenSettings>
 
 	public AstralChunkGenerator(IWorld worldIn, BiomeProvider provider, AstralGenSettings settingsIn)
 	{
-		super(worldIn, new DefaultBiomeProvider(new AstralBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
+		super(worldIn, new DefaultBiomeProvider(new AstralBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, false);
 		this.randomSeed.skip(2620);
 		this.depthNoise = new OctavesNoiseGenerator(this.randomSeed, 15, 0);
 	}

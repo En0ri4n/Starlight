@@ -21,7 +21,7 @@ public class TravelUtils
 	{
 		for(Travels manager : Travels.values())
 		{
-			if(manager.getDimensionLocation() == type.getRegistryName())
+			if(manager.getDimensionLocation().equals(type.getRegistryName()))
 			{
 				return manager.getLevel();
 			}

@@ -4,9 +4,11 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 import fr.eno.starlight.entity.StarEntity;
+import fr.eno.starlight.item.StarControllerItem;
 import fr.eno.starlight.world.teleporter.DefaultTeleporter;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.ServerPlayerEntity;
+import net.minecraft.item.ItemStack;
 import net.minecraft.network.PacketBuffer;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.concurrent.TickDelayedTask;
@@ -43,22 +45,26 @@ public class TravelToDimensionPacket
 
 		if (entity instanceof StarEntity)
 		{
-			StarEntity starEntity = (StarEntity) entity;
-			StarEntity star = starEntity;
-			double x = star.getPosX();
-			double y = star.getPosY();
-			double z = star.getPosZ();
-			float yaw = star.rotationYaw;
-			float pitch = star.rotationPitch;
-			starEntity = (StarEntity) starEntity.getType().create(player.getServerWorld());
-			starEntity.copyDataFromOld(star);
-			starEntity.setLocationAndAngles(x, y, z, yaw, pitch);
-            starEntity.setRotationYawHead(yaw);
-            player.getServerWorld().addFromAnotherDimension(starEntity);
-            
+			StarEntity oldStar = (StarEntity) entity;
+			
+			if(player.getHeldItemMainhand().getItem() instanceof StarControllerItem)
+			{
+				StarControllerItem.storeStarInStack(oldStar, player.getHeldItemMainhand());
+			}
+			else
+			{
+				for(ItemStack stack : player.inventory.mainInventory)
+				{
+					if(!stack.isEmpty() && stack.getItem() instanceof StarControllerItem)
+					{
+						StarControllerItem.storeStarInStack(oldStar, stack);
+						break;
+					}
+				}
+			}
+			
 			player.changeDimension(DimensionType.byName(msg.dimension), DefaultTeleporter.getInstance());
 			player.setPositionAndUpdate(0, 75, 0);
-			player.startRiding(starEntity);
 			
 			player.getServer().enqueue(new TickDelayedTask(100, () ->
 			{

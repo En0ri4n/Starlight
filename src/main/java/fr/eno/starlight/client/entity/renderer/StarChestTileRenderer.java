@@ -9,7 +9,6 @@ import fr.eno.starlight.tileentity.StarChestTile;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
-import net.minecraft.block.ChestBlock;
 import net.minecraft.client.renderer.Atlases;
 import net.minecraft.client.renderer.IRenderTypeBuffer;
 import net.minecraft.client.renderer.RenderType;
@@ -51,13 +50,13 @@ public class StarChestTileRenderer extends TileEntityRenderer<StarChestTile>
 	{
 		World world = tileEntityIn.getWorld();
 		boolean flag = world != null;
-		BlockState blockstate = flag ? tileEntityIn.getBlockState() : Blocks.CHEST.getDefaultState().with(ChestBlock.FACING, Direction.SOUTH);
+		BlockState blockstate = flag ? tileEntityIn.getBlockState() : Blocks.CHEST.getDefaultState().with(StarChestBlock.FACING, Direction.SOUTH);
 		Block block = blockstate.getBlock();
 		if (block instanceof StarChestBlock)
 		{
 			StarChestBlock starChestBlock = (StarChestBlock) block;
 			matrixStackIn.push();
-			float f = blockstate.get(ChestBlock.FACING).getHorizontalAngle();
+			float f = blockstate.has(StarChestBlock.FACING) ? blockstate.get(StarChestBlock.FACING).getHorizontalAngle() : Direction.NORTH.getHorizontalAngle();
 			Material material = new Material(Atlases.CHEST_ATLAS, References.getLoc("textures/entity/chest/star_chest.png"));
 			matrixStackIn.translate(0.5D, 0.5D, 0.5D);
 			matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-f));

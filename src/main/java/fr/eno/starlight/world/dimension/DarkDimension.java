@@ -29,7 +29,7 @@ public class DarkDimension extends Dimension
 	@Override
 	public void tick()
 	{
-		this.getWorld().setDayTime(18000L);
+		// this.getWorld().setDayTime(13000L);
 	}
 	
 	@Override
@@ -65,7 +65,7 @@ public class DarkDimension extends Dimension
 	@Override
 	public float calculateCelestialAngle(long worldTime, float partialTicks)
 	{
-		return 7.0F;
+		return 0.0F;
 	}
 
 	@Override
@@ -77,7 +77,7 @@ public class DarkDimension extends Dimension
 	@Override
 	public Vec3d getFogColor(float celestialAngle, float partialTicks)
 	{
-		return new Vec3d(1D, 4D, 2D);
+		return new Vec3d(0D, 0D, 0D);
 	}
 
 	@Override

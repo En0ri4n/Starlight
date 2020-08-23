@@ -9,6 +9,6 @@ public class UtopianBiomeProviderSettings extends DefaultBiomeProviderSettings
 {
 	public UtopianBiomeProviderSettings(WorldInfo worldInfo)
 	{
-		super(Arrays.asList(Biomes.BEACH, Biomes.LUKEWARM_OCEAN, Biomes.WARM_OCEAN, Biomes.PLAINS));
+		super(Arrays.asList(Biomes.BEACH, Biomes.LUKEWARM_OCEAN, Biomes.WARM_OCEAN, Biomes.PLAINS, Biomes.FOREST, Biomes.SUNFLOWER_PLAINS));
 	}
 }

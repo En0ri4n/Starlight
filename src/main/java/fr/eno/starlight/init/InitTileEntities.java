@@ -11,5 +11,5 @@ public class InitTileEntities
 {
 	public static final DeferredRegister<TileEntityType<?>> TILE_ENTITIES = DeferredRegister.create(ForgeRegistries.TILE_ENTITIES, References.MOD_ID);
 	
-	public static final RegistryObject<TileEntityType<StarChestTile>> STAR_CHEST = TILE_ENTITIES.register("star_chest", () -> TileEntityType.Builder.create(StarChestTile::new).build(null));
+	public static final RegistryObject<TileEntityType<StarChestTile>> STAR_CHEST = TILE_ENTITIES.register("star_chest", () -> TileEntityType.Builder.create(StarChestTile::new, InitBlocks.STAR_CHEST.get()).build(null));
 }

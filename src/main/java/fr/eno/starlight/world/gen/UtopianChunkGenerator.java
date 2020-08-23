@@ -36,7 +36,7 @@ public class UtopianChunkGenerator extends NoiseChunkGenerator<UtopianGenSetting
 
 	public UtopianChunkGenerator(IWorld worldIn, BiomeProvider provider, UtopianGenSettings settingsIn)
 	{
-		super(worldIn, new DefaultBiomeProvider(new UtopianBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
+		super(worldIn, new DefaultBiomeProvider(new UtopianBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, false);
 		this.randomSeed.skip(2620);
 		this.depthNoise = new OctavesNoiseGenerator(this.randomSeed, 15, 0);
 	}

@@ -2,11 +2,13 @@ package fr.eno.starlight.entity;
 
 import java.util.Random;
 
+import fr.eno.starlight.References;
 import fr.eno.starlight.init.InitDimensions;
 import fr.eno.starlight.init.InitEntities;
 import fr.eno.starlight.init.InitItems;
 import fr.eno.starlight.item.StarControllerItem;
 import fr.eno.starlight.item.StarWandItem;
+import fr.eno.starlight.packets.DisplaySimpleSpeechScreenPacket;
 import fr.eno.starlight.packets.DisplaySpeechScreenPacket;
 import fr.eno.starlight.packets.DisplayTravelScreenPacket;
 import fr.eno.starlight.packets.NetworkManager;
@@ -14,14 +16,17 @@ import fr.eno.starlight.utils.TravelUtils;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntitySize;
 import net.minecraft.entity.EntityType;
+import net.minecraft.entity.FlyingEntity;
 import net.minecraft.entity.IRendersAsItem;
-import net.minecraft.entity.LivingEntity;
 import net.minecraft.entity.Pose;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.SpawnReason;
+import net.minecraft.entity.ai.controller.FlyingMovementController;
 import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.EquipmentSlotType;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.NameTagItem;
 import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.network.IPacket;
 import net.minecraft.network.datasync.DataParameter;
@@ -33,6 +38,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
+import net.minecraft.util.text.StringTextComponent;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -41,7 +47,7 @@ import net.minecraftforge.fml.network.NetworkHooks;
 import net.minecraftforge.fml.network.PacketDistributor;
 
 @OnlyIn(value = Dist.CLIENT, _interface = IRendersAsItem.class)
-public class StarEntity extends LivingEntity implements IRendersAsItem
+public class StarEntity extends FlyingEntity implements IRendersAsItem
 {
 	private static final DataParameter<Boolean> HAS_REWARD = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
 	private static final DataParameter<Boolean> IS_TALKING = EntityDataManager.createKey(StarEntity.class, DataSerializers.BOOLEAN);
@@ -52,6 +58,7 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 	public StarEntity(EntityType<? extends StarEntity> type, World world)
 	{
 		super(type, world);
+		this.moveController = new FlyingMovementController(this, 20, false);
 	}
 
 	public StarEntity(World world)
@@ -64,6 +71,16 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 		this(InitEntities.STAR.get(), world);
 		this.setLocationAndAngles(posX, posY, posZ, this.rotationYaw, this.rotationPitch);
 		this.setPosition(posX, posY, posZ);
+	}
+
+	@Override
+	protected void registerAttributes()
+	{
+		super.registerAttributes();
+		// this.getAttribute(ENTITY_GRAVITY).setBaseValue(0.000001D);
+		this.getAttribute(SharedMonsterAttributes.MAX_HEALTH).setBaseValue(1000D);
+		this.getAttributes().registerAttribute(SharedMonsterAttributes.FLYING_SPEED);
+		this.getAttribute(SharedMonsterAttributes.FLYING_SPEED).setBaseValue(1D);
 	}
 
 	@Override
@@ -80,19 +97,19 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 	@Override
 	public AxisAlignedBB getBoundingBox()
 	{
-		float size = 3F;
+		float size = this.getSize() / 6F;
 		return new AxisAlignedBB(this.getPosX() - size / 2, this.getPosY(), this.getPosZ() - size / 2, this.getPosX() + size / 2, this.getPosY() + size / 2, this.getPosZ() + size / 2);
 	}
 
 	@Override
-	public boolean processInitialInteract(PlayerEntity player, Hand hand)
+	public boolean processInteract(PlayerEntity player, Hand hand)
 	{
-		if (hand == Hand.OFF_HAND)
+		if (hand == Hand.OFF_HAND || player.isSneaking() || player.getHeldItem(hand).getItem() instanceof NameTagItem)
 			return false;
 
 		ItemStack stack = player.getHeldItem(hand);
-		
-		if(stack.getItem() instanceof StarWandItem)
+
+		if (stack.getItem() instanceof StarWandItem)
 		{
 			return false;
 		}
@@ -101,7 +118,7 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 		{
 			return this.getPassengers().isEmpty() ? player.startRiding(this) : false;
 		}
-		
+
 		if (!world.isRemote)
 		{
 			NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) player), new DisplaySpeechScreenPacket(this.dimension.getRegistryName(), this.getUniqueID()));
@@ -117,15 +134,15 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 		this.setSize(this.getSize() + 3F);
 	}
 
-	@Override
-	protected int calculateFallDamage(float p_225508_1_, float p_225508_2_)
-	{
-		return 0;
-	}
-
 	public boolean canBeSteered()
 	{
 		return true;
+	}
+
+	@Override
+	public int getMaxAir()
+	{
+		return Integer.MAX_VALUE;
 	}
 
 	@Override
@@ -150,67 +167,105 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 		return this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
 	}
 
-	/*
-	 * Sorry this ugly code :(
-	 */	
 	@Override
-	public void livingTick()
+	public void travel(Vec3d vec)
 	{
+		super.travel(vec);
+
 		if (this.isAlive())
 		{
-			if (!this.hasNoGravity())
-				this.setNoGravity(true);
-			
 			Entity entity = this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
 
 			if (this.isBeingRidden() && this.canBeSteered() && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking())
 			{
-				PlayerEntity player = (PlayerEntity) entity;
-				Vec3d vec = this.getMotion();
-				double x = this.getPosX() + vec.x;
-				double y = this.getPosY() + vec.y;
-				double z = this.getPosZ() + vec.z;
-				this.setMotion(player.getLookVec().scale(0.5F));
-				this.updatePassenger(player);
-				this.setPositionAndRotation(x, y, z, player.rotationYaw, player.rotationPitch);
-				this.fallDistance = 0F;
-				player.fallDistance = 0F;
+				Vec3d look = entity.getLookVec().scale(0.4F);
+				this.setMotion(look);
+				Vec3d vec3d = this.getMotion();
+				double x = this.getPosX() + vec3d.x;
+				double y = this.getPosY() + vec3d.y;
+				double z = this.getPosZ() + vec3d.z;
+				this.setPosition(x, y, z);
 			}
-			else
+			/*
+			 * Entity entity = this.getPassengers().isEmpty() ? null :
+			 * this.getPassengers().get(0); if (this.isBeingRidden() && this.canBeSteered()
+			 * && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking()) {
+			 * PlayerEntity player = (PlayerEntity) entity; Vec3d look =
+			 * player.getLookVec(); this.setMotion(look); this.fallDistance = 0F;
+			 * player.fallDistance = 0F; //super.travel(look); } else {
+			 * this.setMotion(Vec3d.ZERO); }
+			 */
+		}
+	}
+
+	/*
+	 * Sorry for this ugly code :(
+	 */
+	@Override
+	public void livingTick()
+	{
+		super.livingTick();
+		if (this.isAlive())
+		{
+			Entity entity = this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
+
+			if (this.isBeingRidden() && this.canBeSteered() && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking())
+			{
+				// It's ugly :(
+				// I don't know how to fix "moved wrongly!"
+				// but I know it's not the right way to move my entity forward in the world
+				PlayerEntity player = (PlayerEntity) entity;
+				this.setRotation(player.rotationYaw, player.rotationPitch);
+				Vec3d look = entity.getLookVec().scale(0.4F);
+				this.setMotion(look);
+				Vec3d vec3d = this.getMotion();
+				double x = this.getPosX() + vec3d.x;
+				double y = this.getPosY() + vec3d.y;
+				double z = this.getPosZ() + vec3d.z;
+				this.setPosition(x, y, z);
+			} else
 			{
 				this.setMotion(Vec3d.ZERO);
 			}
 		}
-		
+
 		if (!world.isRemote)
 		{
 			this.decreaseRequestCooldown();
 
-			if (this.canTellToPlayer() && this.hasLevel())
+			if (this.canTellToPlayer())
 			{
-				this.tellToPlayer();
+				if(this.hasLevel())
+				{
+					this.tellToPlayer();
+				}
+				else
+				{
+					NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.getPassengers().get(0)), new DisplaySimpleSpeechScreenPacket(References.getTranslate("entity.StarEntity.noLevel")));
+					this.setRequestCooldown(600);
+					this.setMotion(0D, 0D, 0D);
+				}
 			}
 		}
-
-		super.livingTick();
 	}
 
 	private void tellToPlayer()
 	{
 		NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.getPassengers().get(0)), new DisplayTravelScreenPacket(TravelUtils.getDimensionByLevel(this.getLevel()).getId(), this.getUniqueID()));
-		this.setTalking(true);
 		this.setRequestCooldown(600);
 		this.setMotion(0D, 0D, 0D);
 	}
-	
+
 	private boolean hasLevel()
 	{
-		return this.getLevel() > TravelUtils.getLevelByDimension(this.dimension);
+		int lvl = this.getLevel();
+		int requiredLvl = TravelUtils.getLevelByDimension(this.dimension);
+		return lvl > requiredLvl;
 	}
 
 	private boolean canTellToPlayer()
 	{
-		return this.getMotion().y > 0 && canTalk() && this.getPosY() > 200 && !world.isRemote && !isTalking();
+		return canTalk() && this.getPosY() > 200 && !world.isRemote && !isTalking();
 	}
 
 	public boolean canTalk()
@@ -249,7 +304,7 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 
 	public boolean canGiveReward()
 	{
-		return this.hasReward() && this.dimension == InitDimensions.UTOPIAN_DIM_TYPE;
+		return this.hasReward() && this.dimension == InitDimensions.getUtopianType();
 	}
 
 	public boolean hasReward()
@@ -265,7 +320,7 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 	@Override
 	public EntitySize getSize(Pose poseIn)
 	{
-		return new EntitySize(1, this.getSize() / 5F, false);
+		return new EntitySize(1, this.getSize() / (5F * 2F), false);
 	}
 
 	@Override
@@ -289,6 +344,39 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 		this.dataManager.set(LEVEL, level);
 	}
 
+	public CompoundNBT getData()
+	{
+		CompoundNBT compound = new CompoundNBT();
+		compound.putInt("Level", this.getLevel());
+		compound.putBoolean("isTalking", this.isTalking());
+		compound.putInt("RequestCooldown", this.getRequestCooldown());
+		compound.putFloat("Size", this.getSize());
+		return compound;
+	}
+
+	public void setData(CompoundNBT compound)
+	{
+		if (compound.contains("Size"))
+		{
+			this.setSize(compound.getFloat("Size"));
+		}
+
+		if (compound.contains("isTalking"))
+		{
+			this.setTalking(compound.getBoolean("isTalking"));
+		}
+
+		if (compound.contains("RequestCooldown"))
+		{
+			this.setRequestCooldown(compound.getInt("RequestCooldown"));
+		}
+
+		if (compound.contains("Level"))
+		{
+			this.setLevel(compound.getInt("Level"));
+		}
+	}
+
 	public int getLevel()
 	{
 		return this.dataManager.get(LEVEL);
@@ -298,10 +386,62 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 	public void writeAdditional(CompoundNBT compound)
 	{
 		super.writeAdditional(compound);
+		
+		if(this.hasCustomName())
+		{
+			compound.putString("CustomName", this.getCustomName().getFormattedText());
+		}
+		
 		compound.putInt("Level", this.getLevel());
 		compound.putBoolean("isTalking", this.isTalking());
 		compound.putInt("RequestCooldown", this.getRequestCooldown());
 		compound.putFloat("Size", this.getSize());
+	}
+
+	@Override
+	public CompoundNBT writeWithoutTypeId(CompoundNBT compound)
+	{
+		if(this.hasCustomName())
+		{
+			compound.putString("CustomName", this.getCustomName().getFormattedText());
+		}
+		
+		compound.putInt("Level", this.getLevel());
+		compound.putBoolean("isTalking", this.isTalking());
+		compound.putInt("RequestCooldown", this.getRequestCooldown());
+		compound.putFloat("Size", this.getSize());
+		return super.writeWithoutTypeId(compound);
+	}
+	
+	@Override
+	public void read(CompoundNBT compound)
+	{
+		super.read(compound);
+		
+		if (compound.contains("Size"))
+		{
+			this.setSize(compound.getFloat("Size"));
+		}
+
+		if (compound.contains("isTalking"))
+		{
+			this.setTalking(compound.getBoolean("isTalking"));
+		}
+
+		if (compound.contains("RequestCooldown"))
+		{
+			this.setRequestCooldown(compound.getInt("RequestCooldown"));
+		}
+
+		if (compound.contains("Level"))
+		{
+			this.setLevel(compound.getInt("Level"));
+		}
+		
+		if(compound.contains("CustomName"))
+		{
+			this.setCustomName(new StringTextComponent(compound.getString("CustomName")));
+		}
 	}
 
 	@Override
@@ -324,9 +464,14 @@ public class StarEntity extends LivingEntity implements IRendersAsItem
 			this.setRequestCooldown(compound.getInt("RequestCooldown"));
 		}
 
-		if (compound.contains("Size"))
+		if (compound.contains("Level"))
 		{
-			this.setSize(compound.getFloat("Size"));
+			this.setLevel(compound.getInt("Level"));
+		}
+		
+		if(compound.contains("CustomName"))
+		{
+			this.setCustomName(new StringTextComponent(compound.getString("CustomName")));
 		}
 	}
 

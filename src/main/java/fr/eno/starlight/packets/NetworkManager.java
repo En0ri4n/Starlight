@@ -28,6 +28,7 @@ public class NetworkManager
 		network.registerMessage(disc++, UpdateStarEntityPacket.class, UpdateStarEntityPacket::encode, UpdateStarEntityPacket::decode, UpdateStarEntityPacket::handle, toServer());
 		network.registerMessage(disc++, RewardPlayerPacket.class, RewardPlayerPacket::encode, RewardPlayerPacket::decode, RewardPlayerPacket::handle, toServer());
 		network.registerMessage(disc++, DisplaySpeechScreenPacket.class, DisplaySpeechScreenPacket::encode, DisplaySpeechScreenPacket::decode, DisplaySpeechScreenPacket::handle, toClient());
+		network.registerMessage(disc++, DisplaySimpleSpeechScreenPacket.class, DisplaySimpleSpeechScreenPacket::encode, DisplaySimpleSpeechScreenPacket::decode, DisplaySimpleSpeechScreenPacket::handle, toClient());
 		network.registerMessage(disc++, DisplayTravelScreenPacket.class, DisplayTravelScreenPacket::encode, DisplayTravelScreenPacket::decode, DisplayTravelScreenPacket::handle, toClient());
 	}
 

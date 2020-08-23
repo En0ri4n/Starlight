@@ -8,6 +8,7 @@ import it.unimi.dsi.fastutil.floats.Float2FloatFunction;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.ChestBlock;
+import net.minecraft.block.HorizontalBlock;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.LivingEntity;
@@ -15,6 +16,7 @@ import net.minecraft.entity.player.PlayerEntity;
 import net.minecraft.entity.player.ServerPlayerEntity;
 import net.minecraft.inventory.InventoryHelper;
 import net.minecraft.item.ItemStack;
+import net.minecraft.state.BooleanProperty;
 import net.minecraft.state.DirectionProperty;
 import net.minecraft.state.StateContainer.Builder;
 import net.minecraft.state.properties.BlockStateProperties;
@@ -26,6 +28,8 @@ import net.minecraft.util.Direction;
 import net.minecraft.util.Hand;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.BlockRayTraceResult;
+import net.minecraft.util.math.shapes.ISelectionContext;
+import net.minecraft.util.math.shapes.VoxelShape;
 import net.minecraft.world.IBlockReader;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
@@ -36,26 +40,31 @@ import net.minecraftforge.fml.network.NetworkHooks;
 
 public class StarChestBlock extends Block
 {
-	public static final DirectionProperty FACING = BlockStateProperties.FACING;
+	public static final DirectionProperty FACING = HorizontalBlock.HORIZONTAL_FACING;
+	public static final BooleanProperty WATERLOGGED = BlockStateProperties.WATERLOGGED;
+	protected static final VoxelShape SHAPE_NORTH = Block.makeCuboidShape(1.0D, 0.0D, 0.0D, 15.0D, 14.0D, 15.0D);
+	protected static final VoxelShape SHAPE_SOUTH = Block.makeCuboidShape(1.0D, 0.0D, 1.0D, 15.0D, 14.0D, 16.0D);
+	protected static final VoxelShape SHAPE_WEST = Block.makeCuboidShape(0.0D, 0.0D, 1.0D, 15.0D, 14.0D, 15.0D);
+	protected static final VoxelShape SHAPE_EAST = Block.makeCuboidShape(1.0D, 0.0D, 1.0D, 16.0D, 14.0D, 15.0D);
 
 	public StarChestBlock()
 	{
 		super(Block.Properties.create(Material.IRON).hardnessAndResistance(3F).harvestTool(ToolType.PICKAXE).sound(SoundType.GROUND));
 	}
-	
+
 	@Override
 	public ActionResultType onBlockActivated(BlockState state, World worldIn, BlockPos pos, PlayerEntity player, Hand handIn, BlockRayTraceResult hit)
 	{
-		if(!worldIn.isRemote)
+		if (!worldIn.isRemote)
 		{
 			TileEntity tileentity = worldIn.getTileEntity(pos);
-			
-			if(tileentity instanceof StarChestTile)
+
+			if (tileentity instanceof StarChestTile)
 			{
 				NetworkHooks.openGui((ServerPlayerEntity) player, (StarChestTile) tileentity, pos);
 			}
 		}
-		
+
 		return ActionResultType.FAIL;
 	}
 
@@ -80,6 +89,23 @@ public class StarChestBlock extends Block
 			{
 				worldIn.removeTileEntity(pos);
 			}
+		}
+	}
+	
+	@Override
+	public VoxelShape getShape(BlockState state, IBlockReader worldIn, BlockPos pos, ISelectionContext context)
+	{
+		switch(state.get(FACING))
+		{
+			case WEST:
+				return SHAPE_WEST;
+			case EAST:
+				return SHAPE_EAST;
+			case SOUTH:
+				return SHAPE_SOUTH;
+			case NORTH:
+				default:
+					return SHAPE_NORTH;
 		}
 	}
 
@@ -153,6 +179,6 @@ public class StarChestBlock extends Block
 
 	public Direction getDirectionToAttached(BlockState state)
 	{
-		return Direction.UP;
+		return Direction.NORTH;
 	}
 }

@@ -36,7 +36,7 @@ public class DarkChunkGenerator extends NoiseChunkGenerator<DarkGenSettings>
 
 	public DarkChunkGenerator(IWorld worldIn, BiomeProvider provider, DarkGenSettings settingsIn)
 	{
-		super(worldIn, new DefaultBiomeProvider(new DarkBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, true);
+		super(worldIn, new DefaultBiomeProvider(new DarkBiomeProviderSettings(worldIn.getWorldInfo())), 4, 8, 256, settingsIn, false);
 		this.randomSeed.skip(2620);
 		this.depthNoise = new OctavesNoiseGenerator(this.randomSeed, 15, 0);
 	}

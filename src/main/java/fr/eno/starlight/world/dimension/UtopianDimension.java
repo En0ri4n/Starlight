@@ -65,7 +65,7 @@ public class UtopianDimension extends Dimension
 	@Override
 	public Vec3d getFogColor(float celestialAngle, float partialTicks)
 	{
-		return new Vec3d(1D, 4D, 2D);
+		return new Vec3d(0.3D, 0.3D, 0.3D);
 	}
 
 	@Override

@@ -64,13 +64,18 @@ public class StarWandItem extends Item
 
 		if (stack.getTag() != null)
 		{
-			tooltip.add(new StringTextComponent(""));
+			tooltip.add(new StringTextComponent("§6Level : §e" + this.getLevel()));
 
 			if (stack.getTag().getBoolean("Activated"))
 			{
+				int[] overworldPos = stack.getTag().getIntArray("OverworldSpawnPosition");
+				tooltip.add(new StringTextComponent(String.format("§3Overworld Spawn x:§b%s §3y:§b%s §3z:§b%s", overworldPos[0], overworldPos[1], overworldPos[2])));
+				int[] dimPos = stack.getTag().getIntArray("DimensionSpawnPosition");
+				tooltip.add(new StringTextComponent(String.format("§1Dimension Spawn x:§b%s §1y:§b%s §1z:§b%s", dimPos[0], dimPos[1], dimPos[2])));
+				tooltip.add(new StringTextComponent(""));
+
 				tooltip.add(References.getTranslate("item.StarWand.activated"));
-			}
-			else
+			} else
 			{
 				tooltip.add(References.getTranslate("item.StarWand.desactivated"));
 			}
@@ -88,6 +93,12 @@ public class StarWandItem extends Item
 
 		if (!world.isRemote)
 		{
+			if(!isActivated(stack))
+			{
+				player.sendMessage(References.getTranslate("item.StarWand.notActivated"));
+				return ActionResultType.FAIL;
+			}
+			
 			if (player.isSneaking())
 			{
 				CompoundNBT nbt = stack.getTag();
@@ -97,23 +108,21 @@ public class StarWandItem extends Item
 					nbt.putIntArray("DimensionSpawnPosition", array);
 
 					player.sendMessage(References.getTranslate("item.StarWand.SetDimensionSpawn", array.get(0), array.get(1), array.get(2)));
-				}
-				else if (player.dimension == DimensionType.OVERWORLD)
+				} else if (player.dimension == DimensionType.OVERWORLD)
 				{
 					nbt.putIntArray("OverworldSpawnPosition", array);
 
 					player.sendMessage(References.getTranslate("item.StarWand.SetOverworldSpawn", array.get(0), array.get(1), array.get(2)));
-				}
-				else
+				} else
 				{
+					player.sendMessage(References.getTranslate("item.StarWand.notInDimension"));
 					return ActionResultType.FAIL;
 				}
 
 				stack.setTag(nbt);
 
 				return ActionResultType.SUCCESS;
-			}
-			else
+			} else
 			{
 				if (this.getDimension() == DimensionType.OVERWORLD && player.dimension == DimensionType.OVERWORLD)
 				{
@@ -128,12 +137,13 @@ public class StarWandItem extends Item
 					int[] overworldPos = stack.getTag().getIntArray("OverworldSpawnPosition");
 					player.changeDimension(DimensionType.OVERWORLD, DefaultTeleporter.getInstance());
 					player.setPositionAndUpdate(overworldPos[0], overworldPos[1], overworldPos[2]);
-				}
-				else
+					return ActionResultType.SUCCESS;
+				} else
 				{
 					int[] dimPos = stack.getTag().getIntArray("DimensionSpawnPosition");
 					player.changeDimension(this.getDimension(), DefaultTeleporter.getInstance());
 					player.setPositionAndUpdate(dimPos[0], dimPos[1], dimPos[2]);
+					return ActionResultType.SUCCESS;
 				}
 			}
 		}
@@ -141,31 +151,34 @@ public class StarWandItem extends Item
 		return ActionResultType.FAIL;
 
 	}
-	
+
 	@Override
 	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity player, LivingEntity target, Hand hand)
 	{
-		World world = player.getEntityWorld();
-
 		if (!(target instanceof StarEntity))
 		{
 			return false;
 		}
 
-		if (stack.getItem() instanceof StarWandItem)
+		if (stack.getItem() instanceof StarWandItem && !player.world.isRemote)
 		{
 			StarEntity star = (StarEntity) target;
 			int itemLevel = ((StarWandItem) stack.getItem()).getLevel();
 
-			if (itemLevel == star.getLevel() && !StarWandItem.isActivated(stack) && !world.isRemote)
+			if (itemLevel == star.getLevel() && !StarWandItem.isActivated(stack))
 			{
 				CompoundNBT nbt = stack.getTag();
 				nbt.putBoolean("Activated", true);
 				stack.setTag(nbt);
 				star.growUp();
 
-				player.world.playSound(star.getPosX(), star.getPosY(), star.getPosZ(), InitSounds.STAR_GROW.get(), SoundCategory.NEUTRAL, 100, 1F, false);
 				player.sendMessage(References.getTranslate("item.StarWand.starGrowUp"));
+				player.world.playSound(player, star.getPosX(), star.getPosY(), star.getPosZ(), InitSounds.STAR_GROW.get(), SoundCategory.NEUTRAL, 100, 1F);
+				return true;
+			}
+			else if(StarWandItem.isActivated(stack))
+			{
+				player.sendMessage(References.getTranslate("item.StarWand.alreadyActivated"));
 				return true;
 			}
 		}
