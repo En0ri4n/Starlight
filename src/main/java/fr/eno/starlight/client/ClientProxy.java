@@ -11,11 +11,10 @@ import fr.eno.starlight.init.InitEntities;
 import fr.eno.starlight.init.InitTileEntities;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.ScreenManager;
+import net.minecraft.client.renderer.Atlases;
 import net.minecraft.client.renderer.RenderType;
 import net.minecraft.client.renderer.RenderTypeLookup;
-import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DeferredWorkQueue;
-import net.minecraftforge.fml.DistExecutor;
 import net.minecraftforge.fml.client.registry.ClientRegistry;
 import net.minecraftforge.fml.client.registry.RenderingRegistry;
 import net.minecraftforge.fml.event.lifecycle.FMLClientSetupEvent;
@@ -24,7 +23,7 @@ public class ClientProxy
 {
 	private static final Minecraft mc = Minecraft.getInstance();
 	
-	private static void clientSetup(FMLClientSetupEvent event)
+	public static void clientSetup(FMLClientSetupEvent event)
 	{
 		setRenderLayers();
 		registerEntityRenderers();
@@ -35,8 +34,10 @@ public class ClientProxy
 	private static void setRenderLayers()
 	{
 		Predicate<RenderType> solid = (render) -> render == RenderType.getSolid();
+		Predicate<RenderType> chest = (render) -> render == RenderType.getEntityCutout(Atlases.CHEST_ATLAS);
 		
 		RenderTypeLookup.setRenderLayer(InitBlocks.STAR_STONE.get(), solid);
+		RenderTypeLookup.setRenderLayer(InitBlocks.STAR_CHEST.get(), chest);
 	}
 	
 	private static void registerEntityRenderers()
@@ -55,17 +56,5 @@ public class ClientProxy
 	private static void bindTileEntityRenderers()
 	{
 		ClientRegistry.bindTileEntityRenderer(InitTileEntities.STAR_CHEST.get(), StarChestTileRenderer::new);
-	}
-	
-	public static DistExecutor.SafeRunnable executeClientTask(IEventBus bus)
-	{
-		return new DistExecutor.SafeRunnable()
-		{
-			@Override
-			public void run()
-			{
-				bus.addListener(ClientProxy::clientSetup);
-			}
-		};
 	}
 }

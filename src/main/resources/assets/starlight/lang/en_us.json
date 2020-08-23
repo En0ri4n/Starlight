@@ -28,7 +28,9 @@
 	"block.starlight.star_grass": "Star Grass",
 	"block.starlight.fragmented_star_ore": "Fragmented Star Ore",
 	
-	"starlight.entity.StarEntity.noLevel": "§cI don't have the energy to travel in the space !"
+	"starlight.entity.StarEntity.noLevel": "§cI don't have the energy to travel in the space !",
+	
+	"starlight.item.StarSummoner.starName": "§6%s's Star",
 	
 	"starlight.item.StarWand.teleportation": "§6You will be teleported...",
 	"starlight.item.StarWand.alreadyInDimension": "§cYou are already in this Dimension !",
@@ -49,7 +51,8 @@
 	"starlight.screen.SpeechScreen.astral.speech": "YES ! we did it ! I didn't think we could go this far :) ! I still need the energy to get the speed necessary to go to the Dark Dimension. This planet is quite calm I believe, you can walk around it without fear... but I need a Astral Star Wand :)",
 	"starlight.screen.SpeechScreen.dark.speech": "Ouch ! We are coming to the dark planet... This planet is believed to be scary and populated by evil people and ... it's true ! Be careful of yourself if you visit this planet! Monsters are stronger than you think. I need a Dark Star Wand",
 	"starlight.screen.SpeechScreen.utopian.speech": "Here we are ! The utopian planet! Thank you for having accompanied me here, I would never have made this trip without you ! I have something for you that might be useful in the future. As for me, I'll stay here until my parents come to pick me up !",
-	
+
+	"starlight.screen.RequestScreen.overworld.request": "§aDo you want to go back to the overworld ?",
 	"starlight.screen.RequestScreen.astral.request": "§aDo you want to go to the Astral planet ?",
 	"starlight.screen.RequestScreen.dark.request": "§aDo you want to go to the Dark planet ?",
 	"starlight.screen.RequestScreen.utopian.request": "§aDo you want to go to the Utopian planet ?"

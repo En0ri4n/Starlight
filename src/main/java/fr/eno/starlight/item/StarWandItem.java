@@ -7,7 +7,6 @@ import com.mojang.realmsclient.gui.ChatFormatting;
 
 import fr.eno.starlight.References;
 import fr.eno.starlight.entity.StarEntity;
-import fr.eno.starlight.init.InitSounds;
 import fr.eno.starlight.utils.Tabs;
 import fr.eno.starlight.world.teleporter.DefaultTeleporter;
 import net.minecraft.client.Minecraft;
@@ -23,7 +22,6 @@ import net.minecraft.nbt.CompoundNBT;
 import net.minecraft.util.ActionResultType;
 import net.minecraft.util.Hand;
 import net.minecraft.util.ResourceLocation;
-import net.minecraft.util.SoundCategory;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.StringTextComponent;
@@ -170,10 +168,10 @@ public class StarWandItem extends Item
 				CompoundNBT nbt = stack.getTag();
 				nbt.putBoolean("Activated", true);
 				stack.setTag(nbt);
+				player.setHeldItem(hand, stack);
 				star.growUp();
 
 				player.sendMessage(References.getTranslate("item.StarWand.starGrowUp"));
-				player.world.playSound(player, star.getPosX(), star.getPosY(), star.getPosZ(), InitSounds.STAR_GROW.get(), SoundCategory.NEUTRAL, 100, 1F);
 				return true;
 			}
 			else if(StarWandItem.isActivated(stack))

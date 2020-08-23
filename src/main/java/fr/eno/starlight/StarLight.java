@@ -3,7 +3,6 @@ package fr.eno.starlight;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import fr.eno.starlight.client.ClientProxy;
 import fr.eno.starlight.init.InitBiomeProvider;
 import fr.eno.starlight.init.InitBiomes;
 import fr.eno.starlight.init.InitBlocks;
@@ -17,6 +16,7 @@ import fr.eno.starlight.init.InitSounds;
 import fr.eno.starlight.init.InitSurfaceBuilder;
 import fr.eno.starlight.init.InitTileEntities;
 import fr.eno.starlight.packets.NetworkManager;
+import fr.eno.starlight.utils.ClientExecutor;
 import fr.eno.starlight.world.gen.OreGenManager;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.api.distmarker.Dist;
@@ -38,7 +38,7 @@ public class StarLight
 		
 		bus.addListener(this::commonSetup);
 		
-		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientProxy.executeClientTask(bus));
+		DistExecutor.safeRunWhenOn(Dist.CLIENT, () -> ClientExecutor.executeClientTask(bus));
 		
 		InitBiomeProvider.BIOME_PROVIDER_TYPE.register(bus);
 		InitBiomes.BIOMES.register(bus);

@@ -22,10 +22,12 @@ import net.minecraft.tileentity.IChestLid;
 import net.minecraft.tileentity.TileEntityMerger;
 import net.minecraft.tileentity.TileEntityMerger.ICallbackWrapper;
 import net.minecraft.util.Direction;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.world.World;
 
 public class StarChestTileRenderer extends TileEntityRenderer<StarChestTile>
 {
+	public static final ResourceLocation STAR_CHEST_TEXTURE = References.getLoc("entity/chest/star_chest");
 	private ModelRenderer singleBottom;
 	private ModelRenderer singleLid;
 	private ModelRenderer singleLatch;
@@ -57,7 +59,7 @@ public class StarChestTileRenderer extends TileEntityRenderer<StarChestTile>
 			StarChestBlock starChestBlock = (StarChestBlock) block;
 			matrixStackIn.push();
 			float f = blockstate.has(StarChestBlock.FACING) ? blockstate.get(StarChestBlock.FACING).getHorizontalAngle() : Direction.NORTH.getHorizontalAngle();
-			Material material = new Material(Atlases.CHEST_ATLAS, References.getLoc("textures/entity/chest/star_chest.png"));
+			Material material = new Material(Atlases.CHEST_ATLAS, STAR_CHEST_TEXTURE);
 			matrixStackIn.translate(0.5D, 0.5D, 0.5D);
 			matrixStackIn.rotate(Vector3f.YP.rotationDegrees(-f));
 			matrixStackIn.translate(-0.5D, -0.5D, -0.5D);

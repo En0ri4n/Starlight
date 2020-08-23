@@ -49,10 +49,10 @@ public class StarControllerItem extends Item
 	@Override
 	public boolean itemInteractionForEntity(ItemStack stack, PlayerEntity playerIn, LivingEntity target, Hand hand)
 	{
-		if (target instanceof StarEntity && !playerIn.world.isRemote)
+		if (target instanceof StarEntity && !playerIn.world.isRemote && playerIn.isSneaking() && !hasStarStored(stack))
 		{
 			StarEntity star = (StarEntity) target;
-			storeStarInStack(star, stack);
+			storeStarInStack(playerIn, star, stack);
 			playerIn.sendStatusMessage(References.getTranslate("item.StarController.storeSuccess"), true);
 			return true;
 		}
@@ -88,7 +88,7 @@ public class StarControllerItem extends Item
 				}
 			}
 
-			player.sendMessage(References.getTranslate("item.StarController.anyStarStored"));
+			player.sendStatusMessage(References.getTranslate("item.StarController.anyStarStored"), true);
 			return ActionResultType.FAIL;
 		}
 		
@@ -117,13 +117,14 @@ public class StarControllerItem extends Item
 		return false;
 	}
 
-	public static void storeStarInStack(StarEntity star, ItemStack stack)
+	public static void storeStarInStack(PlayerEntity player, StarEntity star, ItemStack stack)
 	{
 		if (!hasStarStored(stack))
 		{
 			CompoundNBT compound = stack.getTag() == null ? new CompoundNBT() : stack.getTag();
 			compound.put("StarEntityTag", star.serializeNBT());
 			stack.setTag(compound);
+			player.setHeldItem(Hand.MAIN_HAND, stack);
 			star.remove();
 		}
 	}

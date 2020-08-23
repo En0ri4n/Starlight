@@ -2,6 +2,7 @@ package fr.eno.starlight.utils;
 
 import java.util.UUID;
 
+import fr.eno.starlight.client.ClientProxy;
 import fr.eno.starlight.client.screen.SimpleSpeechScreen;
 import fr.eno.starlight.client.screen.SpeechScreen;
 import fr.eno.starlight.client.screen.TravelRequestScreen;
@@ -9,6 +10,7 @@ import fr.eno.starlight.client.utils.Speechs;
 import net.minecraft.client.Minecraft;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.text.ITextComponent;
+import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.DistExecutor;
 
 public class ClientExecutor
@@ -59,6 +61,18 @@ public class ClientExecutor
 			public void run()
 			{
 				mc.gameSettings.thirdPersonView = 1;
+			}
+		};
+	}
+	
+	public static DistExecutor.SafeRunnable executeClientTask(IEventBus bus)
+	{
+		return new DistExecutor.SafeRunnable()
+		{
+			@Override
+			public void run()
+			{
+				bus.addListener(ClientProxy::clientSetup);
 			}
 		};
 	}

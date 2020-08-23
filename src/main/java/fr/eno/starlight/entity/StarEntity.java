@@ -38,7 +38,7 @@ import net.minecraft.util.NonNullList;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3d;
-import net.minecraft.util.text.StringTextComponent;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.world.IWorld;
 import net.minecraft.world.World;
 import net.minecraftforge.api.distmarker.Dist;
@@ -148,13 +148,16 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 	@Override
 	public boolean canPassengerSteer()
 	{
-		if (this.getControllingPassenger() instanceof PlayerEntity)
+		if (!this.getPassengers().isEmpty())
 		{
-			PlayerEntity player = (PlayerEntity) this.getControllingPassenger();
-
-			if (player.getHeldItemMainhand().getItem() instanceof StarControllerItem && !isTalking())
+			if (this.getPassengers().get(0) instanceof PlayerEntity)
 			{
-				return true;
+				PlayerEntity player = (PlayerEntity) this.getPassengers().get(0);
+
+				if (player.getHeldItemMainhand().getItem() instanceof StarControllerItem && !isTalking())
+				{
+					return true;
+				}
 			}
 		}
 
@@ -162,58 +165,16 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 	}
 
 	@Override
-	public Entity getControllingPassenger()
-	{
-		return this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
-	}
-
-	@Override
-	public void travel(Vec3d vec)
-	{
-		super.travel(vec);
-
-		if (this.isAlive())
-		{
-			Entity entity = this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
-
-			if (this.isBeingRidden() && this.canBeSteered() && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking())
-			{
-				Vec3d look = entity.getLookVec().scale(0.4F);
-				this.setMotion(look);
-				Vec3d vec3d = this.getMotion();
-				double x = this.getPosX() + vec3d.x;
-				double y = this.getPosY() + vec3d.y;
-				double z = this.getPosZ() + vec3d.z;
-				this.setPosition(x, y, z);
-			}
-			/*
-			 * Entity entity = this.getPassengers().isEmpty() ? null :
-			 * this.getPassengers().get(0); if (this.isBeingRidden() && this.canBeSteered()
-			 * && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking()) {
-			 * PlayerEntity player = (PlayerEntity) entity; Vec3d look =
-			 * player.getLookVec(); this.setMotion(look); this.fallDistance = 0F;
-			 * player.fallDistance = 0F; //super.travel(look); } else {
-			 * this.setMotion(Vec3d.ZERO); }
-			 */
-		}
-	}
-
-	/*
-	 * Sorry for this ugly code :(
-	 */
-	@Override
 	public void livingTick()
 	{
 		super.livingTick();
+
 		if (this.isAlive())
 		{
 			Entity entity = this.getPassengers().isEmpty() ? null : this.getPassengers().get(0);
-
-			if (this.isBeingRidden() && this.canBeSteered() && this.canPassengerSteer() && this.isOnePlayerRiding() && !isTalking())
+			
+			if (entity instanceof PlayerEntity && this.isBeingRidden() && this.canBeSteered() && this.canPassengerSteer() && !isTalking())
 			{
-				// It's ugly :(
-				// I don't know how to fix "moved wrongly!"
-				// but I know it's not the right way to move my entity forward in the world
 				PlayerEntity player = (PlayerEntity) entity;
 				this.setRotation(player.rotationYaw, player.rotationPitch);
 				Vec3d look = entity.getLookVec().scale(0.4F);
@@ -222,7 +183,14 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 				double x = this.getPosX() + vec3d.x;
 				double y = this.getPosY() + vec3d.y;
 				double z = this.getPosZ() + vec3d.z;
-				this.setPosition(x, y, z);
+				
+				if(world.getBlockState(new BlockPos(x, y, z)).isAir() && world.getBlockState(new BlockPos(x, y + 1, z)).isAir() && !world.isRemote)
+				{
+					this.setPosition(x, y, z);
+				}
+				
+				player.fallDistance = 0F;
+				this.fallDistance = 0F;
 			} else
 			{
 				this.setMotion(Vec3d.ZERO);
@@ -235,11 +203,10 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 
 			if (this.canTellToPlayer())
 			{
-				if(this.hasLevel())
+				if (this.hasLevel())
 				{
 					this.tellToPlayer();
-				}
-				else
+				} else
 				{
 					NetworkManager.getNetwork().send(PacketDistributor.PLAYER.with(() -> (ServerPlayerEntity) this.getPassengers().get(0)), new DisplaySimpleSpeechScreenPacket(References.getTranslate("entity.StarEntity.noLevel")));
 					this.setRequestCooldown(600);
@@ -386,12 +353,12 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 	public void writeAdditional(CompoundNBT compound)
 	{
 		super.writeAdditional(compound);
-		
-		if(this.hasCustomName())
+
+		if (this.hasCustomName())
 		{
-			compound.putString("CustomName", this.getCustomName().getFormattedText());
+			compound.putString("CustomName", ITextComponent.Serializer.toJson(this.getCustomName()));
 		}
-		
+
 		compound.putInt("Level", this.getLevel());
 		compound.putBoolean("isTalking", this.isTalking());
 		compound.putInt("RequestCooldown", this.getRequestCooldown());
@@ -401,23 +368,18 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 	@Override
 	public CompoundNBT writeWithoutTypeId(CompoundNBT compound)
 	{
-		if(this.hasCustomName())
-		{
-			compound.putString("CustomName", this.getCustomName().getFormattedText());
-		}
-		
 		compound.putInt("Level", this.getLevel());
 		compound.putBoolean("isTalking", this.isTalking());
 		compound.putInt("RequestCooldown", this.getRequestCooldown());
 		compound.putFloat("Size", this.getSize());
 		return super.writeWithoutTypeId(compound);
 	}
-	
+
 	@Override
 	public void read(CompoundNBT compound)
 	{
 		super.read(compound);
-		
+
 		if (compound.contains("Size"))
 		{
 			this.setSize(compound.getFloat("Size"));
@@ -436,11 +398,6 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 		if (compound.contains("Level"))
 		{
 			this.setLevel(compound.getInt("Level"));
-		}
-		
-		if(compound.contains("CustomName"))
-		{
-			this.setCustomName(new StringTextComponent(compound.getString("CustomName")));
 		}
 	}
 
@@ -449,6 +406,11 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 	{
 		super.readAdditional(compound);
 
+		if (compound.contains("CustomName"))
+		{
+			this.setCustomName(ITextComponent.Serializer.fromJson(compound.getString("CustomName")));
+		}
+
 		if (compound.contains("Size"))
 		{
 			this.setSize(compound.getFloat("Size"));
@@ -467,11 +429,6 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 		if (compound.contains("Level"))
 		{
 			this.setLevel(compound.getInt("Level"));
-		}
-		
-		if(compound.contains("CustomName"))
-		{
-			this.setCustomName(new StringTextComponent(compound.getString("CustomName")));
 		}
 	}
 

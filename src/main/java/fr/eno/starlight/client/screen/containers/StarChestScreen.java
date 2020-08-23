@@ -4,6 +4,7 @@ import com.mojang.blaze3d.systems.RenderSystem;
 
 import fr.eno.starlight.References;
 import fr.eno.starlight.container.ContainerStarChest;
+import net.minecraft.client.gui.AbstractGui;
 import net.minecraft.client.gui.screen.inventory.ContainerScreen;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.ResourceLocation;
@@ -16,8 +17,8 @@ public class StarChestScreen extends ContainerScreen<ContainerStarChest>
 	public StarChestScreen(ContainerStarChest screenContainer, PlayerInventory inv, ITextComponent titleIn)
 	{
 		super(screenContainer, inv, titleIn);
-		this.xSize = 200;
-		this.ySize = 200;
+		this.xSize = 374;
+		this.ySize = 292;
 	}
 
 	@Override
@@ -27,6 +28,6 @@ public class StarChestScreen extends ContainerScreen<ContainerStarChest>
 		this.minecraft.getTextureManager().bindTexture(STAR_CHEST_GUI_TEXTURE);
 		int x = (this.width - this.xSize) / 2;
 		int y = (this.height - this.ySize) / 2;
-		this.blit(x, y, 0, 0, this.xSize, 200 * 18 + 17);
+		AbstractGui.blit(x, y, 0, 0, this.xSize, this.ySize, 512, 512);
 	}
 }

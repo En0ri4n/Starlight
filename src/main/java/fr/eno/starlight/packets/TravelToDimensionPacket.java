@@ -49,7 +49,7 @@ public class TravelToDimensionPacket
 			
 			if(player.getHeldItemMainhand().getItem() instanceof StarControllerItem)
 			{
-				StarControllerItem.storeStarInStack(oldStar, player.getHeldItemMainhand());
+				StarControllerItem.storeStarInStack(player, oldStar, player.getHeldItemMainhand());
 			}
 			else
 			{
@@ -57,7 +57,7 @@ public class TravelToDimensionPacket
 				{
 					if(!stack.isEmpty() && stack.getItem() instanceof StarControllerItem)
 					{
-						StarControllerItem.storeStarInStack(oldStar, stack);
+						StarControllerItem.storeStarInStack(player, oldStar, stack);
 						break;
 					}
 				}

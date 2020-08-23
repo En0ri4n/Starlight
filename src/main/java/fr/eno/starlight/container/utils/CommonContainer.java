@@ -39,6 +39,22 @@ public class CommonContainer extends ContainerData
 			this.addSlot(new Slot(playerInventory, k, 8 + k * 18, 142));
 		}
 	}
+	
+	protected void bindPlayerInventory(PlayerInventory playerInventory, int x, int y)
+	{
+		for (int i = 0; i < 3; ++i)
+		{
+			for (int j = 0; j < 9; ++j)
+			{
+				this.addSlot(new Slot(playerInventory, j + i * 9 + 9, x + j * 18, y + i * 18));
+			}
+		}
+
+		for (int k = 0; k < 9; ++k)
+		{
+			this.addSlot(new Slot(playerInventory, k, x + k * 18, y + 58));
+		}
+	}
 
 	@Override
 	@Nonnull

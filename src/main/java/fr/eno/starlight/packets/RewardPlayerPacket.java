@@ -64,7 +64,7 @@ public class RewardPlayerPacket
 			});
 		}
 		
-		StarControllerItem.storeStarInStack(star, stack);
+		StarControllerItem.storeStarInStack(player, star, stack);
 
 		ctx.get().setPacketHandled(true);
 	}

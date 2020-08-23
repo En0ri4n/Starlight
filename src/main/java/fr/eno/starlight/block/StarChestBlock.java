@@ -49,7 +49,7 @@ public class StarChestBlock extends Block
 
 	public StarChestBlock()
 	{
-		super(Block.Properties.create(Material.IRON).hardnessAndResistance(3F).harvestTool(ToolType.PICKAXE).sound(SoundType.GROUND));
+		super(Block.Properties.create(Material.IRON).hardnessAndResistance(3F).harvestTool(ToolType.PICKAXE).sound(SoundType.WOOD));
 	}
 
 	@Override
