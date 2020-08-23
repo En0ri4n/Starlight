@@ -15,8 +15,6 @@ import net.minecraftforge.fml.DistExecutor;
 
 public class ClientExecutor
 {
-	final static Minecraft mc = Minecraft.getInstance();
-
 	public static DistExecutor.SafeRunnable openSpeechScreen(ResourceLocation loc, UUID starId)
 	{
 		return new DistExecutor.SafeRunnable()
@@ -24,7 +22,7 @@ public class ClientExecutor
 			@Override
 			public void run()
 			{
-				mc.displayGuiScreen(new SpeechScreen(Speechs.getByDimensionLoc(loc), starId));
+				Minecraft.getInstance().displayGuiScreen(new SpeechScreen(Speechs.getByDimensionLoc(loc), starId));
 			}
 		};
 	}
@@ -36,7 +34,7 @@ public class ClientExecutor
 			@Override
 			public void run()
 			{
-				mc.displayGuiScreen(new SimpleSpeechScreen(textIn));
+				Minecraft.getInstance().displayGuiScreen(new SimpleSpeechScreen(textIn));
 			}
 		};
 	}
@@ -48,7 +46,7 @@ public class ClientExecutor
 			@Override
 			public void run()
 			{
-				mc.displayGuiScreen(new TravelRequestScreen(Travels.getById(id), starId));
+				Minecraft.getInstance().displayGuiScreen(new TravelRequestScreen(Travels.getById(id), starId));
 			}
 		};
 	}
@@ -57,10 +55,11 @@ public class ClientExecutor
 	{
 		return new DistExecutor.SafeRunnable()
 		{
+			@SuppressWarnings("resource")
 			@Override
 			public void run()
 			{
-				mc.gameSettings.thirdPersonView = 1;
+				Minecraft.getInstance().gameSettings.thirdPersonView = 1;
 			}
 		};
 	}

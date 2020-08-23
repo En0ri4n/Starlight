@@ -184,7 +184,7 @@ public class StarEntity extends FlyingEntity implements IRendersAsItem
 				double y = this.getPosY() + vec3d.y;
 				double z = this.getPosZ() + vec3d.z;
 				
-				if(world.getBlockState(new BlockPos(x, y, z)).isAir() && world.getBlockState(new BlockPos(x, y + 1, z)).isAir() && !world.isRemote)
+				if(world.getBlockState(new BlockPos(x, y, z)).isAir() && world.getBlockState(new BlockPos(x, y + 1, z)).isAir())
 				{
 					this.setPosition(x, y, z);
 				}
